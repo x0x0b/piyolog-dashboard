@@ -40,7 +40,7 @@
 
 ## ローカル開発
 
-Node.js 22とnpmを使用します。
+Node.js 24 LTSとnpmを使用します。
 
 ```sh
 npm ci
