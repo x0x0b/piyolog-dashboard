@@ -661,13 +661,6 @@ input[type='password']::placeholder {
   font-variant-numeric: tabular-nums;
 }
 
-.timeline-instruction {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.5;
-}
-
 .timeline-row {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr);
@@ -962,35 +955,6 @@ input[type='password']::placeholder {
   line-height: 1.4;
 }
 
-.timeline-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px 15px;
-  margin: 16px 0 0 68px;
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.timeline-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.legend-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-
-.legend-bar {
-  width: 12px;
-  height: 6px;
-  border: 1px solid var(--sleep);
-  border-radius: 5px;
-  background: var(--sleep-wash);
-}
-
 .empty-inline {
   margin: 12px 0 2px;
   color: var(--muted);
@@ -1222,17 +1186,9 @@ input[type='password']::placeholder {
     margin-left: 58px;
   }
 
-  .timeline-instruction {
-    font-size: 9px;
-  }
-
   .timeline-row {
     grid-template-columns: 50px minmax(0, 1fr);
     gap: 8px;
-  }
-
-  .timeline-legend {
-    margin-left: 58px;
   }
 
 }

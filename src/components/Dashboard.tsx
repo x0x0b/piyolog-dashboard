@@ -308,9 +308,6 @@ function Timeline({
           <h2 id="timeline-title">24時間のタイムライン</h2>
         </div>
       </div>
-      <p className="timeline-instruction">
-        PCは記録にマウスを重ね、スマホはタップすると詳細を表示します。スマホは外側タップで閉じます。
-      </p>
       <div className="timeline-axis">
         <span>{formatLocalTime(feed.range.from)}</span>
         <span>{formatLocalTime(midpoint)}</span>
@@ -377,36 +374,6 @@ function Timeline({
         onToggleTooltip={toggleTooltip}
         onClearPinnedTooltip={clearPinnedTooltip}
       />
-      <div className="timeline-legend" aria-label="タイムラインの凡例">
-        <span>
-          <i className="legend-dot formula-dot" />
-          ミルク
-        </span>
-        <span>
-          <i className="legend-dot expressed-dot" />
-          搾母乳
-        </span>
-        <span>
-          <i className="legend-dot breastfeeding-dot" />
-          母乳
-        </span>
-        <span>
-          <i className="legend-dot pee-dot" />
-          おしっこ
-        </span>
-        <span>
-          <i className="legend-dot poop-dot" />
-          うんち
-        </span>
-        <span>
-          <i className="legend-dot sleep-dot" />
-          睡眠・起床
-        </span>
-        <span>
-          <i className="legend-bar" />
-          睡眠区間
-        </span>
-      </div>
     </section>
   );
 }
