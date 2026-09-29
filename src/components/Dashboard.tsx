@@ -612,12 +612,11 @@ export default function Dashboard({
 
         {feed && analytics && formula && (
           <>
-            <section className="next-feed-card" aria-labelledby="next-feed-title">
-              <h2 id="next-feed-title">ミルク時間の目安</h2>
+            <section className="next-feed-card" aria-label="ミルク記録と間隔">
               {estimatedNext && remaining !== null ? (
-                <div className="next-feed-flow">
+                <div className="next-feed-layout">
                   <div className="next-feed-origin">
-                    <span>前回の粉ミルク記録は</span>
+                    <span className="next-feed-label">前回のミルク</span>
                     <strong>{lastFormula ? formatDueTime(new Date(lastFormula)) : '—'}</strong>
                     <small>
                       {lastFormulaAmount !== null
@@ -625,27 +624,29 @@ export default function Dashboard({
                         : '量の記録なし'}
                     </small>
                   </div>
-                  <label className="interval-picker">
-                    <select
-                      value={feedingInterval}
-                      onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
-                      aria-label="前回の粉ミルク記録に加える間隔"
-                    >
-                      {feedingIntervalOptions.map((minutes) => (
-                        <option key={minutes} value={minutes / 60}>
-                          {formatFeedingInterval(minutes)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
                   <div className="next-feed-result">
-                    <span className="next-feed-after">後は</span>
-                    <strong>{formatDueTime(estimatedNext)}</strong>
-                    <span className="next-feed-countdown">
-                      {remaining > 0
-                        ? 'あと' + durationLabel(remaining)
-                        : durationLabel(-remaining) + '経過'}
-                    </span>
+                    <div className="next-feed-estimate-line">
+                      <select
+                        value={feedingInterval}
+                        onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
+                        aria-label="前回からの間隔"
+                      >
+                        {feedingIntervalOptions.map((minutes) => (
+                          <option key={minutes} value={minutes / 60}>
+                            {formatFeedingInterval(minutes)}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="next-feed-after">後は</span>
+                      <div className="next-feed-time">
+                        <strong>{formatDueTime(estimatedNext)}</strong>
+                        <span className="next-feed-countdown">
+                          {remaining > 0
+                            ? 'あと' + durationLabel(remaining)
+                            : durationLabel(-remaining) + '経過'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -654,9 +655,6 @@ export default function Dashboard({
                   <span>粉ミルクを記録すると、前回の時刻を表示できます</span>
                 </div>
               )}
-              <p className="reference-caption">
-                表示時刻は前回の粉ミルク記録に選択した間隔を加えた目安です。授乳はお子さまの様子や医療専門家の指示を優先してください。
-              </p>
             </section>
 
             {feed.records.length === 0 && (
