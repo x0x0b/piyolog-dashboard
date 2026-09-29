@@ -686,12 +686,42 @@ input[type='text']::placeholder {
 }
 
 .timeline-axis {
-  display: flex;
-  justify-content: space-between;
-  margin: 14px 0 9px 68px;
+  position: relative;
+  height: 12px;
+  margin: 14px 0 3px 68px;
   color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
+}
+
+.timeline-axis-label {
+  position: absolute;
+  top: 0;
+  display: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.timeline-axis-label-wide {
+  display: block;
+}
+
+.timeline-axis-label-start {
+  transform: none;
+}
+
+.timeline-axis-label-end {
+  transform: translateX(-100%);
+}
+
+@media (max-width: 760px) {
+  .timeline-axis-label-wide {
+    display: none;
+  }
+
+  .timeline-axis-label-medium {
+    display: block;
+  }
 }
 
 .timeline-row {
@@ -711,14 +741,17 @@ input[type='text']::placeholder {
   position: relative;
   height: 23px;
   border-radius: 8px;
-  background:
-    linear-gradient(
-      to right,
-      transparent calc(50% - 0.5px),
-      var(--border) 50%,
-      transparent calc(50% + 0.5px)
-    ),
-    var(--lane);
+  background: var(--lane);
+}
+
+.timeline-hour-line {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--border-strong);
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .timeline-lane::before,
@@ -1209,6 +1242,14 @@ input[type='text']::placeholder {
 
   .timeline-axis {
     margin-left: 58px;
+  }
+
+  .timeline-axis-label-medium {
+    display: none;
+  }
+
+  .timeline-axis-label-narrow {
+    display: block;
   }
 
   .timeline-row {

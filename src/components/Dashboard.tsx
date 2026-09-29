@@ -33,6 +33,45 @@ interface DashboardProps {
 const numberFormat = new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 1 });
 const FormulaChart = lazy(() => import('./FormulaChart'));
 
+interface TimelineHourTick {
+  timestamp: number;
+  position: number;
+  hour: number;
+  label: string;
+}
+
+function timelineHourTicks(from: number, to: number): TimelineHourTick[] {
+  const ticks: TimelineHourTick[] = [];
+  const firstMinute = Math.floor(from / 60_000) * 60_000 + 60_000;
+  for (let timestamp = firstMinute; timestamp < to; timestamp += 60_000) {
+    const date = new Date(timestamp);
+    if (date.getMinutes() === 0) {
+      ticks.push({
+        timestamp,
+        position: ((timestamp - from) / (to - from)) * 100,
+        hour: date.getHours(),
+        label: formatLocalTime(date.toISOString()),
+      });
+    }
+  }
+  return ticks;
+}
+
+function timelineAxisLabelClass(tick: TimelineHourTick): string {
+  const cadenceClasses = [
+    tick.hour % 3 === 0 ? 'timeline-axis-label-wide' : '',
+    tick.hour % 4 === 0 ? 'timeline-axis-label-medium' : '',
+    tick.hour % 6 === 0 ? 'timeline-axis-label-narrow' : '',
+  ];
+  const edgeClass =
+    tick.position < 8
+      ? 'timeline-axis-label-start'
+      : tick.position > 92
+        ? 'timeline-axis-label-end'
+        : '';
+  return ['timeline-axis-label', ...cadenceClasses, edgeClass].filter(Boolean).join(' ');
+}
+
 function amountText(value: number | null, eventCount: number): string {
   if (value === null) return eventCount === 0 ? '0 ml' : '—';
   return numberFormat.format(value) + ' ml';
@@ -167,6 +206,7 @@ function TimelineRow({
   records,
   from,
   to,
+  hourTicks,
   tone,
   sleepIntervals,
   pinnedTooltipId,
@@ -177,6 +217,7 @@ function TimelineRow({
   records: FeedRecord[];
   from: number;
   to: number;
+  hourTicks: TimelineHourTick[];
   tone: string;
   sleepIntervals?: Array<{ startAt: string; endAt: string | null }>;
   pinnedTooltipId: string | null;
@@ -187,6 +228,14 @@ function TimelineRow({
     <div className="timeline-row">
       <span className="timeline-label">{label}</span>
       <div className="timeline-lane">
+        {hourTicks.map((tick) => (
+          <span
+            className="timeline-hour-line"
+            key={tick.timestamp}
+            style={{ left: tick.position + '%' }}
+            aria-hidden="true"
+          />
+        ))}
         {sleepIntervals?.map((interval) => {
           if (interval.endAt === null) return null;
           const endAt = interval.endAt;
@@ -290,7 +339,7 @@ function Timeline({
 
   const from = Date.parse(feed.range.from);
   const to = Date.parse(feed.range.to);
-  const midpoint = new Date(from + (to - from) / 2).toISOString();
+  const hourTicks = timelineHourTicks(from, to);
   const formula = validFeedRecords(feed, ['Formula']);
   const expressed = validFeedRecords(feed, ['ExpressedBreastMilk']);
   const breastfeeding = validFeedRecords(feed, ['BreastFeeding']);
@@ -306,15 +355,22 @@ function Timeline({
         </div>
       </div>
       <div className="timeline-axis">
-        <span>{formatLocalTime(feed.range.from)}</span>
-        <span>{formatLocalTime(midpoint)}</span>
-        <span>{formatLocalTime(feed.range.to)}</span>
+        {hourTicks.map((tick) => (
+          <span
+            className={timelineAxisLabelClass(tick)}
+            key={tick.timestamp}
+            style={{ left: tick.position + '%' }}
+          >
+            {tick.label}
+          </span>
+        ))}
       </div>
       <TimelineRow
         label="ミルク"
         records={formula}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="formula-dot"
         pinnedTooltipId={pinnedTooltipId}
         onToggleTooltip={toggleTooltip}
@@ -325,6 +381,7 @@ function Timeline({
         records={expressed}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="expressed-dot"
         pinnedTooltipId={pinnedTooltipId}
         onToggleTooltip={toggleTooltip}
@@ -335,6 +392,7 @@ function Timeline({
         records={breastfeeding}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="breastfeeding-dot"
         pinnedTooltipId={pinnedTooltipId}
         onToggleTooltip={toggleTooltip}
@@ -345,6 +403,7 @@ function Timeline({
         records={pee}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="pee-dot"
         pinnedTooltipId={pinnedTooltipId}
         onToggleTooltip={toggleTooltip}
@@ -355,6 +414,7 @@ function Timeline({
         records={poop}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="poop-dot"
         pinnedTooltipId={pinnedTooltipId}
         onToggleTooltip={toggleTooltip}
@@ -365,6 +425,7 @@ function Timeline({
         records={sleep}
         from={from}
         to={to}
+        hourTicks={hourTicks}
         tone="sleep-dot"
         sleepIntervals={sleepIntervals}
         pinnedTooltipId={pinnedTooltipId}
@@ -571,7 +632,6 @@ export default function Dashboard({
                     </small>
                   </div>
                   <label className="interval-picker">
-                    <span>間隔</span>
                     <select
                       value={feedingInterval}
                       onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}

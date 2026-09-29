@@ -34,7 +34,7 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
       ) : (
         <div className="chart-wrap" role="img" aria-label="直近24時間のミルク量グラフ">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={records} margin={{ top: 12, right: 4, left: -18, bottom: 2 }}>
+            <BarChart data={records} margin={{ top: 12, right: 4, left: 0, bottom: 2 }}>
               <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeDasharray="4 5" />
               <XAxis
                 dataKey="time"
@@ -52,7 +52,7 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: 'var(--muted)', fontSize: 11 }}
-                width={42}
+                width={56}
                 tickFormatter={(value: number) => String(value)}
               />
               <Tooltip
