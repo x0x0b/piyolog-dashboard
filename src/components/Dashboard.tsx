@@ -304,7 +304,6 @@ function Timeline({
     <section className="panel timeline-panel" aria-labelledby="timeline-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">ACTIVITY</p>
           <h2 id="timeline-title">24時間のタイムライン</h2>
         </div>
       </div>
@@ -469,7 +468,7 @@ export default function Dashboard({
   const error = feedErrorMessage(errorKind, retryInSeconds);
   const canRefresh = !isLoading && retryInSeconds === 0 && !isMock;
   const rangeText = feed
-    ? formatLocalDateTime(feed.range.from) + '〜' + formatLocalTime(feed.range.to)
+    ? formatLocalDateTime(feed.range.from) + ' 〜 ' + formatLocalDateTime(feed.range.to)
     : '';
   const expressed = analytics?.expressedBreastMilk;
   const breastfeeding = analytics?.breastFeeding;
@@ -479,7 +478,7 @@ export default function Dashboard({
       <header className="app-header">
         <a className="wordmark" href="./" aria-label="きょうの育児ログ ホーム">
           <span className="wordmark-icon" aria-hidden="true">
-            ひ
+            ぴ
           </span>
           <span>
             <strong>きょうの育児ログ</strong>
@@ -516,17 +515,12 @@ export default function Dashboard({
 
       <div className="dashboard-content">
         <section className="page-intro">
-          <div>
-            <p className="eyebrow">
-              {new Intl.DateTimeFormat('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long',
-              }).format(new Date(now))}
-            </p>
-            <h1>今日のようす</h1>
-          </div>
+          {feed && (
+            <div className="range-context">
+              <span className="range-context-label">対象範囲</span>
+              <h1>{rangeText}</h1>
+            </div>
+          )}
           <div className="feed-actions">
             <button
               className="text-button"
@@ -580,12 +574,9 @@ export default function Dashboard({
 
         {feed && analytics && formula && (
           <>
-            <section className="last-feed-card">
-              <div className="last-feed-top">
-                <div>
-                  <p className="eyebrow">LAST FORMULA</p>
-                  <h2>前回のミルク</h2>
-                </div>
+            <section className="next-feed-card" aria-labelledby="next-feed-title">
+              <div className="next-feed-top">
+                <h2 id="next-feed-title">次回のミルク予定</h2>
                 <label className="interval-picker">
                   <span>間隔の参考設定</span>
                   <select
@@ -601,46 +592,50 @@ export default function Dashboard({
                   </select>
                 </label>
               </div>
-              {lastFormula ? (
-                <div className="last-feed-main">
-                  <div className="last-feed-amount">
-                    <strong>{formatLocalTime(lastFormula)}</strong>
-                    <span>
-                      {lastFormulaAmount !== null
-                        ? numberFormat.format(lastFormulaAmount) + ' ml'
-                        : '量の記録なし'}
-                    </span>
+              {estimatedNext && remaining !== null ? (
+                <div className="next-feed-main">
+                  <div className="next-feed-time">
+                    <span>次回予定時刻</span>
+                    <strong>{formatDueTime(estimatedNext)}</strong>
                   </div>
-                  <div className="last-feed-elapsed">
-                    <span>
-                      {elapsed === null
-                        ? ''
-                        : elapsed < 0
-                          ? '経過時間を表示できません'
-                          : durationLabel(elapsed) + '経過'}
-                    </span>
-                    <div className="estimate-box">
-                      {estimatedNext && remaining !== null && remaining > 0 ? (
-                        <>
-                          <strong>あと{durationLabel(remaining)}</strong>
-                          <span>次回目安 {formatDueTime(estimatedNext)}</span>
-                        </>
-                      ) : (
-                        <>
-                          <strong>{estimatedNext ? '参考時刻' : '次回目安'}</strong>
-                          <span>
-                            {estimatedNext ? '過ぎています · ' + formatDueTime(estimatedNext) : '—'}
-                          </span>
-                        </>
-                      )}
-                    </div>
+                  <div className={'next-feed-countdown' + (remaining <= 0 ? ' is-overdue' : '')}>
+                    {remaining > 0 ? (
+                      <>
+                        <span>あと</span>
+                        <strong>{durationLabel(remaining)}</strong>
+                      </>
+                    ) : (
+                      <strong>予定時刻を過ぎています</strong>
+                    )}
                   </div>
                 </div>
               ) : (
-                <p className="empty-inline last-empty">直近24時間のミルク記録はありません</p>
+                <div className="next-feed-empty">
+                  <strong>—</strong>
+                  <span>前回のミルクを記録すると、次回予定を表示できます</span>
+                </div>
               )}
+              <div className="previous-feed-info">
+                <div className="previous-feed-record">
+                  <span>前回のミルク</span>
+                  <strong>
+                    {lastFormula
+                      ? formatLocalDateTime(lastFormula) +
+                        ' · ' +
+                        (lastFormulaAmount !== null
+                          ? numberFormat.format(lastFormulaAmount) + ' ml'
+                          : '量の記録なし')
+                      : '記録なし'}
+                  </strong>
+                </div>
+                {lastFormula && elapsed !== null && (
+                  <span className="previous-feed-elapsed">
+                    {elapsed < 0 ? '経過時間を表示できません' : durationLabel(elapsed) + '経過'}
+                  </span>
+                )}
+              </div>
               <p className="reference-caption">
-                次回目安は最終ミルク時刻に設定間隔を足した参考表示です。ぴよログの提供値や医療的な推奨ではありません。
+                次回予定は前回のミルク時刻に設定間隔を足した参考表示です。ぴよログの提供値や医療的な推奨ではありません。
               </p>
             </section>
 
@@ -655,30 +650,29 @@ export default function Dashboard({
             <section className="summary-section" aria-labelledby="summary-title">
               <div className="section-heading summary-heading">
                 <div>
-                  <p className="eyebrow">SUMMARY</p>
                   <h2 id="summary-title">サマリー</h2>
                 </div>
-                <span className="section-note">今日と直近24時間</span>
+                <span className="section-note">今日（0時〜現在）・直近24時間</span>
               </div>
               <div className="summary-grid">
                 <CountTile
-                  label="今日のミルク"
+                  label="今日の合計ミルク量"
                   value={amountText(formula.todayTotal, formula.today)}
-                  detail={'今日 ' + String(formula.today) + '回'}
+                  detail={'0時〜現在 · ' + String(formula.today) + '回'}
                   tone="tile-formula"
                 />
                 <CountTile
-                  label="直近24時間のミルク"
+                  label="直近24時間の合計ミルク量"
                   value={amountText(formula.last24HoursTotal, formula.last24Hours)}
-                  detail={'直近24時間 ' + String(formula.last24Hours) + '回'}
+                  detail={String(formula.last24Hours) + '回'}
                   tone="tile-formula"
                 />
                 <CountTile
-                  label="1回平均量"
+                  label="ミルク1回あたりの平均量"
                   value={
                     formula.average === null ? '—' : numberFormat.format(formula.average) + ' ml'
                   }
-                  detail="量が記録されたミルク"
+                  detail="直近24時間のうち、量が記録されたミルクから計算"
                 />
                 <CountTile
                   label="平均ミルク間隔"
@@ -687,55 +681,53 @@ export default function Dashboard({
                       ? '—'
                       : durationLabel(formula.averageIntervalMillis)
                   }
-                  detail="直近24時間の記録から計算"
+                  detail="直近24時間のミルク記録から計算"
                 />
                 <CountTile
-                  label="おしっこ"
+                  label="直近24時間の搾母乳量"
+                  value={amountText(
+                    expressed?.last24HoursTotal ?? null,
+                    expressed?.last24Hours ?? 0,
+                  )}
+                  detail={String(expressed?.last24Hours ?? 0) + '回 · 粉ミルクとは別集計'}
+                  tone="tile-expressed"
+                />
+                <CountTile
+                  label="直近24時間の授乳"
+                  value={String(breastfeeding?.last24Hours ?? 0) + '回'}
+                  detail={
+                    (breastfeeding?.totalMillis == null
+                      ? '授乳時間の記録なし'
+                      : '合計授乳時間 ' + durationLabel(breastfeeding.totalMillis)) +
+                    (breastfeeding?.measuredAmount == null
+                      ? ''
+                      : ' · 記録量 ' + numberFormat.format(breastfeeding.measuredAmount) + ' ml')
+                  }
+                />
+                <CountTile
+                  label="今日のおしっこ"
                   value={String(analytics.pee.today) + '回'}
                   detail={
                     '直近24時間 ' +
                     String(analytics.pee.last24Hours) +
-                    '回 · 最終 ' +
+                    '回 · 最後 ' +
                     timeText(analytics.pee.lastAt)
                   }
                   tone="tile-pee"
                 />
                 <CountTile
-                  label="うんち"
+                  label="今日のうんち"
                   value={String(analytics.poop.today) + '回'}
                   detail={
                     '直近24時間 ' +
                     String(analytics.poop.last24Hours) +
-                    '回 · 最終 ' +
+                    '回 · 最後 ' +
                     timeText(analytics.poop.lastAt)
                   }
                   tone="tile-poop"
                 />
                 <CountTile
-                  label="搾母乳"
-                  value={amountText(
-                    expressed?.last24HoursTotal ?? null,
-                    expressed?.last24Hours ?? 0,
-                  )}
-                  detail={
-                    '直近24時間 ' + String(expressed?.last24Hours ?? 0) + '回 · 粉ミルクとは別集計'
-                  }
-                  tone="tile-expressed"
-                />
-                <CountTile
-                  label="母乳"
-                  value={String(breastfeeding?.last24Hours ?? 0) + '回'}
-                  detail={
-                    (breastfeeding?.totalMillis == null
-                      ? '授乳時間の記録なし'
-                      : '授乳時間 ' + durationLabel(breastfeeding.totalMillis)) +
-                    (breastfeeding?.measuredAmount == null
-                      ? ''
-                      : ' · 入力量 ' + numberFormat.format(breastfeeding.measuredAmount) + ' ml')
-                  }
-                />
-                <CountTile
-                  label="確定した睡眠時間"
+                  label="直近24時間の睡眠時間"
                   value={
                     analytics.sleep.confirmedMillis === 0
                       ? '—'
@@ -746,22 +738,21 @@ export default function Dashboard({
                       ? '睡眠中 · ' + formatLocalTime(analytics.sleep.currentSleepStart) + 'から'
                       : analytics.sleep.intervals.length === 0
                         ? '睡眠の記録なし'
-                        : 'Sleepから次のWakeUpまで'
+                        : '起床まで記録された区間の合計'
                   }
                   tone="tile-sleep"
                 />
               </div>
             </section>
 
+            <Timeline feed={feed} sleepIntervals={analytics.sleep.intervals} />
             <Suspense
               fallback={<div className="chart-loading panel">グラフを読み込んでいます…</div>}
             >
               <FormulaChart feed={feed} />
             </Suspense>
-            <Timeline feed={feed} sleepIntervals={analytics.sleep.intervals} />
 
             <footer className="data-footer">
-              <span>対象範囲 {rangeText}</span>
               <span>
                 {isMock
                   ? '開発用サンプルデータ'

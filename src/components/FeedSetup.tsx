@@ -51,12 +51,11 @@ export default function FeedSetup({
     <main className="setup-page">
       <div className="setup-card">
         <div className="brand-mark" aria-hidden="true">
-          <span>ひ</span>
+          <span>ぴ</span>
         </div>
-        <p className="eyebrow">PRIVATE FAMILY DASHBOARD</p>
         <h1>ぴよログ データフィードURL</h1>
         <p className="setup-lead">
-          ぴよログアプリからコピーした24時間Feed URLを貼り付けて、今日の記録を見やすくまとめます。
+          ぴよログアプリからコピーした24時間Feed URLを貼り付けて、直近24時間の記録を見やすくまとめます。
         </p>
 
         <form onSubmit={submit}>

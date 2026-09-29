@@ -25,7 +25,6 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
     <section className="panel chart-panel" aria-labelledby="formula-chart-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">FORMULA</p>
           <h2 id="formula-chart-title">ミルク量</h2>
         </div>
         <span className="section-note">直近24時間</span>
