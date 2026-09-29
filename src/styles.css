@@ -688,7 +688,7 @@ input[type='text']::placeholder {
 .timeline-axis {
   position: relative;
   height: 12px;
-  margin: 14px 0 3px 68px;
+  margin: 14px 0 0 68px;
   color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
@@ -704,14 +704,6 @@ input[type='text']::placeholder {
 
 .timeline-axis-label-wide {
   display: block;
-}
-
-.timeline-axis-label-start {
-  transform: none;
-}
-
-.timeline-axis-label-end {
-  transform: translateX(-100%);
 }
 
 @media (max-width: 760px) {

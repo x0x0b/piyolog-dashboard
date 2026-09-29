@@ -63,13 +63,7 @@ function timelineAxisLabelClass(tick: TimelineHourTick): string {
     tick.hour % 4 === 0 ? 'timeline-axis-label-medium' : '',
     tick.hour % 6 === 0 ? 'timeline-axis-label-narrow' : '',
   ];
-  const edgeClass =
-    tick.position < 8
-      ? 'timeline-axis-label-start'
-      : tick.position > 92
-        ? 'timeline-axis-label-end'
-        : '';
-  return ['timeline-axis-label', ...cadenceClasses, edgeClass].filter(Boolean).join(' ');
+  return ['timeline-axis-label', ...cadenceClasses].filter(Boolean).join(' ');
 }
 
 function amountText(value: number | null, eventCount: number): string {
