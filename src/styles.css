@@ -121,7 +121,7 @@ a {
   font-weight: 750;
 }
 
-input[type='password'] {
+input[type='text'] {
   width: 100%;
   min-height: 54px;
   padding: 0 16px;
@@ -135,13 +135,13 @@ input[type='password'] {
     box-shadow 120ms ease;
 }
 
-input[type='password']:focus {
+input[type='text']:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-wash);
   outline: 0;
 }
 
-input[type='password']::placeholder {
+input[type='text']::placeholder {
   color: var(--muted-2);
 }
 
@@ -246,6 +246,39 @@ input[type='password']::placeholder {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.8;
+}
+
+.disclaimer-note {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.75;
+}
+
+.disclaimer-note h2 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.disclaimer-note p {
+  margin: 0;
+}
+
+.disclaimer-note p + p {
+  margin-top: 8px;
+}
+
+.disclaimer-note a {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .privacy-note code {
@@ -364,18 +397,6 @@ input[type='password']::placeholder {
   display: none;
 }
 
-.button-refresh {
-  min-width: 82px;
-  color: var(--text);
-  border-color: var(--border);
-  background: var(--surface);
-}
-
-.button-refresh span {
-  font-size: 17px;
-  line-height: 0;
-}
-
 .dashboard-content {
   width: min(100% - 32px, 940px);
   margin: 0 auto;
@@ -442,91 +463,87 @@ input[type='password']::placeholder {
   box-shadow: 0 12px 34px var(--highlight-shadow);
 }
 
-.next-feed-top {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.next-feed-top h2 {
+.next-feed-card > h2 {
   margin: 0;
   font-size: 18px;
   letter-spacing: -0.035em;
 }
 
-.interval-picker {
+.next-feed-flow {
   display: grid;
-  justify-items: end;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(14px, 3vw, 28px);
+  margin-top: 21px;
+}
+
+.next-feed-origin,
+.next-feed-result {
+  display: grid;
+  justify-items: start;
   gap: 5px;
+  min-width: 0;
 }
 
-.interval-picker span {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.interval-picker select {
-  min-height: 37px;
-}
-
-.next-feed-main {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 20px;
-}
-
-.next-feed-time {
-  display: grid;
-  gap: 4px;
-}
-
-.next-feed-time > span {
+.next-feed-origin > span,
+.next-feed-after {
   color: var(--muted);
   font-size: 11px;
 }
 
-.next-feed-time strong {
+.next-feed-origin > strong {
+  font-size: clamp(31px, 6vw, 43px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-feed-origin > small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.interval-picker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.interval-picker span {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.interval-picker select {
+  min-height: 41px;
+}
+
+.next-feed-result {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 3px 7px;
+}
+
+.next-feed-result > strong {
   color: var(--accent);
-  font-size: clamp(46px, 9vw, 68px);
+  font-size: clamp(42px, 8vw, 60px);
   line-height: 1;
   letter-spacing: -0.065em;
   font-variant-numeric: tabular-nums;
 }
 
 .next-feed-countdown {
-  display: grid;
-  justify-items: end;
-  gap: 2px;
-  min-width: 118px;
-  padding: 12px 15px;
-  border: 1px solid var(--highlight-border);
-  border-radius: 15px;
-  background: var(--surface-translucent);
-  text-align: right;
-}
-
-.next-feed-countdown > span {
+  grid-column: 1 / -1;
   color: var(--muted);
-  font-size: 10px;
-}
-
-.next-feed-countdown > strong {
-  font-size: 17px;
-  letter-spacing: -0.025em;
-}
-
-.next-feed-countdown.is-overdue > strong {
-  color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .next-feed-empty {
   display: grid;
   gap: 6px;
-  margin-top: 17px;
+  margin-top: 21px;
 }
 
 .next-feed-empty strong {
@@ -540,42 +557,8 @@ input[type='password']::placeholder {
   font-size: 11px;
 }
 
-.previous-feed-info {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 14px;
-  margin-top: 18px;
-  padding-top: 13px;
-  border-top: 1px solid var(--highlight-border);
-}
-
-.previous-feed-record {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 5px 10px;
-}
-
-.previous-feed-record > span {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.previous-feed-record > strong {
-  font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.previous-feed-elapsed {
-  color: var(--muted);
-  font-size: 10px;
-}
-
 .reference-caption {
-  margin: 19px 0 0;
+  margin: 16px 0 0;
   color: var(--muted);
   font-size: 10px;
   line-height: 1.7;
@@ -1185,11 +1168,6 @@ input[type='password']::placeholder {
     color: var(--text);
   }
 
-  .button-refresh {
-    min-width: 74px;
-    padding: 0 10px;
-  }
-
   .dashboard-content {
     width: min(100% - 26px, 940px);
     padding-top: 25px;
@@ -1205,33 +1183,19 @@ input[type='password']::placeholder {
     justify-content: flex-start;
   }
 
-  .next-feed-top {
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
+  .next-feed-flow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px 10px;
   }
 
-  .interval-picker {
-    justify-items: start;
-    margin-left: auto;
+  .next-feed-result {
+    grid-column: 1 / -1;
+    grid-template-columns: auto auto;
+    align-items: baseline;
   }
 
-  .next-feed-main {
-    align-items: center;
-    gap: 10px;
-  }
-
-  .next-feed-time strong {
-    font-size: clamp(42px, 13vw, 58px);
-  }
-
-  .next-feed-countdown {
-    min-width: 0;
-    padding: 9px 11px;
-  }
-
-  .next-feed-countdown > strong {
-    font-size: 15px;
+  .next-feed-result > strong {
+    font-size: clamp(46px, 13vw, 58px);
   }
 
   .summary-tile {

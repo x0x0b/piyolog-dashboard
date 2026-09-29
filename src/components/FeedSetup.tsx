@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { isValidFeedUrl } from '../data/feedClient';
 import type { FeedErrorKind } from '../data/feedClient';
 import { feedErrorMessage } from '../lib/feedErrorMessage';
+import Disclaimer from './Disclaimer';
 
 interface FeedSetupProps {
   hasSavedFeed: boolean;
@@ -23,14 +24,10 @@ export default function FeedSetup({
   onUseMock,
 }: FeedSetupProps) {
   const [url, setUrl] = useState('');
-  const [remember, setRemember] = useState(hasSavedFeed);
+  const [remember, setRemember] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const error = validationError ?? feedErrorMessage(errorKind, retryInSeconds);
-
-  useEffect(() => {
-    if (!hasSavedFeed) setRemember(false);
-  }, [hasSavedFeed]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,7 +52,7 @@ export default function FeedSetup({
         </div>
         <h1>ぴよログ かんたんダッシュボード</h1>
         <p className="setup-lead">
-          ぴよログアプリからコピーした24時間Feed URLを貼り付けて、直近24時間の記録を見やすくまとめます。
+          ぴよログの直近24時間の記録を見やすくまとめます。
         </p>
 
         <form onSubmit={submit}>
@@ -64,7 +61,7 @@ export default function FeedSetup({
           </label>
           <input
             id="feed-url"
-            type="password"
+            type="text"
             inputMode="url"
             autoComplete="off"
             autoCapitalize="off"
@@ -75,11 +72,17 @@ export default function FeedSetup({
               setValidationError(null);
             }}
             placeholder="ぴよログからコピーしたURLを貼り付け"
-            aria-describedby="feed-url-hint"
+            aria-describedby={error ? 'feed-url-hint feed-url-error' : 'feed-url-hint'}
           />
           <p className="field-hint" id="feed-url-hint">
-            URL全体をそのまま貼り付けてください。入力内容は画面上では伏せて表示します。
+            URL全体をそのまま貼り付けてください。
           </p>
+
+          {error && (
+            <div className="alert alert-error" id="feed-url-error" role="alert">
+              {error}
+            </div>
+          )}
 
           <label className="check-row">
             <input
@@ -90,15 +93,20 @@ export default function FeedSetup({
             <span>この端末に保存する</span>
           </label>
           <p className="field-hint check-hint">
-            保存を選んだ場合だけ、このブラウザのlocalStorageにFeed URLを保存します。
+            初期状態ではオンです。保存しない場合はチェックを外してください。
           </p>
 
-          {error && (
-            <div className="alert alert-error" role="alert">
-              {error}
-            </div>
-          )}
           {savingNotice && <div className="alert alert-note">{savingNotice}</div>}
+
+          <aside className="privacy-note">
+            <h2>プライバシーについて</h2>
+            <p>
+              Feed URLはこのブラウザから<code>feed.piyolog.com</code>
+              へ直接送信し、このアプリの運営者には送信しません。育児記録はブラウザ内で表示し、保存しません。
+            </p>
+          </aside>
+
+          <Disclaimer />
 
           <button
             className="button button-primary button-wide"
@@ -118,15 +126,6 @@ export default function FeedSetup({
             保存済みFeed URLを削除
           </button>
         )}
-
-        <aside className="privacy-note">
-          <h2>プライバシーについて</h2>
-          <p>
-            Feed URLはパスワードと同じように扱ってください。通信はこのブラウザから
-            <code>feed.piyolog.com</code>へ直接行い、このアプリの運営者には送信しません。
-            育児記録はブラウザ内のメモリで表示し、保存しません。
-          </p>
-        </aside>
 
         {import.meta.env.DEV && (
           <button className="button button-quiet button-wide mock-button" onClick={onUseMock}>

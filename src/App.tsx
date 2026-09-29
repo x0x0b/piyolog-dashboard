@@ -34,10 +34,17 @@ function readPreferences(): Preferences {
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null) return defaults;
     const candidate = parsed as Record<string, unknown>;
+    const candidateInterval = candidate.feedingInterval;
+    const intervalMinutes = typeof candidateInterval === 'number' ? candidateInterval * 60 : NaN;
+    const roundedIntervalMinutes = Math.round(intervalMinutes);
     const feedingInterval =
-      typeof candidate.feedingInterval === 'number' &&
-      [2, 2.5, 3, 3.5, 4].includes(candidate.feedingInterval)
-        ? candidate.feedingInterval
+      typeof candidateInterval === 'number' &&
+      Number.isFinite(intervalMinutes) &&
+      Math.abs(intervalMinutes - roundedIntervalMinutes) < 0.0001 &&
+      roundedIntervalMinutes >= 120 &&
+      roundedIntervalMinutes <= 240 &&
+      roundedIntervalMinutes % 5 === 0
+        ? candidateInterval
         : defaults.feedingInterval;
     const theme =
       candidate.theme === 'system' || candidate.theme === 'light' || candidate.theme === 'dark'
@@ -140,6 +147,39 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const canRetryAutomatically =
+      errorKind === null ||
+      errorKind === 'network' ||
+      errorKind === 'server' ||
+      errorKind === 'rate-limit' ||
+      errorKind === 'invalid-response' ||
+      errorKind === 'cooldown';
+    if (
+      screen !== 'dashboard' ||
+      !activeUrl ||
+      isMock ||
+      isLoading ||
+      nextAllowedAtRef.current === 0 ||
+      !canRetryAutomatically
+    ) {
+      return;
+    }
+
+    const refreshWhenAllowed = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() >= nextAllowedAtRef.current) void requestFeed(activeUrl, true);
+    };
+    const delay = Math.max(0, nextAllowedAtRef.current - Date.now());
+    const timer = window.setTimeout(refreshWhenAllowed, delay);
+    document.addEventListener('visibilitychange', refreshWhenAllowed);
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refreshWhenAllowed);
+    };
+  }, [activeUrl, errorKind, isLoading, isMock, nextAllowedAt, requestFeed, screen]);
+
+  useEffect(() => {
     if (errorKind === 'cooldown' && now >= nextAllowedAt) setErrorKind(null);
   }, [errorKind, nextAllowedAt, now]);
 
@@ -221,10 +261,6 @@ export default function App() {
     setScreen('dashboard');
   }
 
-  function refresh() {
-    if (activeUrl) void requestFeed(activeUrl, true);
-  }
-
   function changeFeedingInterval(hours: number) {
     setPreferences((current) => ({ ...current, feedingInterval: hours }));
   }
@@ -259,7 +295,6 @@ export default function App() {
       feedingInterval={preferences.feedingInterval}
       theme={preferences.theme}
       savingNotice={savingNotice}
-      onRefresh={refresh}
       onChangeFeed={changeFeed}
       onFeedingIntervalChange={changeFeedingInterval}
       onThemeChange={changeTheme}

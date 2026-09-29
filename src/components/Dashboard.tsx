@@ -10,6 +10,7 @@ import {
 import { feedErrorMessage } from '../lib/feedErrorMessage';
 import type { FeedErrorKind } from '../data/feedClient';
 import type { FeedRecord, PiyologFeedV1 } from '../types/feed';
+import Disclaimer from './Disclaimer';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -24,7 +25,6 @@ interface DashboardProps {
   feedingInterval: number;
   theme: ThemePreference;
   savingNotice: string | null;
-  onRefresh: () => void;
   onChangeFeed: () => void;
   onFeedingIntervalChange: (hours: number) => void;
   onThemeChange: (theme: ThemePreference) => void;
@@ -430,6 +430,14 @@ function formatDueTime(date: Date): string {
   return new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
+const feedingIntervalOptions = Array.from({ length: 25 }, (_, index) => 120 + index * 5);
+
+function formatFeedingInterval(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return String(hours) + '時間' + (remainingMinutes > 0 ? String(remainingMinutes) + '分' : '');
+}
+
 export default function Dashboard({
   feed,
   now,
@@ -441,7 +449,6 @@ export default function Dashboard({
   feedingInterval,
   theme,
   savingNotice,
-  onRefresh,
   onChangeFeed,
   onFeedingIntervalChange,
   onThemeChange,
@@ -459,10 +466,8 @@ export default function Dashboard({
   const estimatedNext = nextFeedingEstimate(lastFormula, feedingInterval);
   const feedClockNow =
     feed && lastFetchedAt !== null ? Date.parse(feed.generated_at) + (now - lastFetchedAt) : now;
-  const elapsed = lastFormula ? feedClockNow - Date.parse(lastFormula) : null;
   const remaining = estimatedNext ? estimatedNext.getTime() - feedClockNow : null;
   const error = feedErrorMessage(errorKind, retryInSeconds);
-  const canRefresh = !isLoading && retryInSeconds === 0 && !isMock;
   const rangeText = feed
     ? formatLocalDateTime(feed.range.from) + ' 〜 ' + formatLocalDateTime(feed.range.to)
     : '';
@@ -497,15 +502,6 @@ export default function Dashboard({
               <option value="dark">ダーク</option>
             </select>
           </label>
-          <button
-            className="button button-refresh"
-            onClick={onRefresh}
-            disabled={!canRefresh}
-            type="button"
-          >
-            <span aria-hidden="true">↻</span>
-            {isLoading ? '更新中' : retryInSeconds > 0 ? retryInSeconds + '秒後' : '更新'}
-          </button>
         </div>
       </header>
 
@@ -562,67 +558,50 @@ export default function Dashboard({
         {feed && analytics && formula && (
           <>
             <section className="next-feed-card" aria-labelledby="next-feed-title">
-              <div className="next-feed-top">
-                <h2 id="next-feed-title">次回のミルク予定</h2>
-                <label className="interval-picker">
-                  <span>間隔の参考設定</span>
-                  <select
-                    value={feedingInterval}
-                    onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
-                    aria-label="次回目安の計算に使う間隔"
-                  >
-                    <option value={2}>2時間</option>
-                    <option value={2.5}>2時間30分</option>
-                    <option value={3}>3時間</option>
-                    <option value={3.5}>3時間30分</option>
-                    <option value={4}>4時間</option>
-                  </select>
-                </label>
-              </div>
+              <h2 id="next-feed-title">ミルク時間の目安</h2>
               {estimatedNext && remaining !== null ? (
-                <div className="next-feed-main">
-                  <div className="next-feed-time">
-                    <span>次回予定時刻</span>
-                    <strong>{formatDueTime(estimatedNext)}</strong>
+                <div className="next-feed-flow">
+                  <div className="next-feed-origin">
+                    <span>前回の粉ミルク記録は</span>
+                    <strong>{lastFormula ? formatDueTime(new Date(lastFormula)) : '—'}</strong>
+                    <small>
+                      {lastFormulaAmount !== null
+                        ? numberFormat.format(lastFormulaAmount) + ' ml'
+                        : '量の記録なし'}
+                    </small>
                   </div>
-                  <div className={'next-feed-countdown' + (remaining <= 0 ? ' is-overdue' : '')}>
-                    {remaining > 0 ? (
-                      <>
-                        <span>あと</span>
-                        <strong>{durationLabel(remaining)}</strong>
-                      </>
-                    ) : (
-                      <strong>予定時刻を過ぎています</strong>
-                    )}
+                  <label className="interval-picker">
+                    <span>間隔</span>
+                    <select
+                      value={feedingInterval}
+                      onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
+                      aria-label="前回の粉ミルク記録に加える間隔"
+                    >
+                      {feedingIntervalOptions.map((minutes) => (
+                        <option key={minutes} value={minutes / 60}>
+                          {formatFeedingInterval(minutes)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="next-feed-result">
+                    <span className="next-feed-after">後は</span>
+                    <strong>{formatDueTime(estimatedNext)}</strong>
+                    <span className="next-feed-countdown">
+                      {remaining > 0
+                        ? 'あと' + durationLabel(remaining)
+                        : durationLabel(-remaining) + '経過'}
+                    </span>
                   </div>
                 </div>
               ) : (
                 <div className="next-feed-empty">
                   <strong>—</strong>
-                  <span>前回のミルクを記録すると、次回予定を表示できます</span>
+                  <span>粉ミルクを記録すると、前回の時刻を表示できます</span>
                 </div>
               )}
-              <div className="previous-feed-info">
-                <div className="previous-feed-record">
-                  <span>前回のミルク</span>
-                  <strong>
-                    {lastFormula
-                      ? formatLocalDateTime(lastFormula) +
-                        ' · ' +
-                        (lastFormulaAmount !== null
-                          ? numberFormat.format(lastFormulaAmount) + ' ml'
-                          : '量の記録なし')
-                      : '記録なし'}
-                  </strong>
-                </div>
-                {lastFormula && elapsed !== null && (
-                  <span className="previous-feed-elapsed">
-                    {elapsed < 0 ? '経過時間を表示できません' : durationLabel(elapsed) + '経過'}
-                  </span>
-                )}
-              </div>
               <p className="reference-caption">
-                次回予定は前回のミルク時刻に設定間隔を足した参考表示です。ぴよログの提供値や医療的な推奨ではありません。
+                表示時刻は前回の粉ミルク記録に選択した間隔を加えた目安です。授乳はお子さまの様子や医療専門家の指示を優先してください。
               </p>
             </section>
 
@@ -747,6 +726,11 @@ export default function Dashboard({
                     (lastFetchedAt
                       ? formatLocalDateTime(new Date(lastFetchedAt).toISOString())
                       : '—') +
+                    (isLoading
+                      ? ' · 更新中'
+                      : errorKind
+                        ? ' · 自動更新エラー'
+                        : ' · 自動更新 約1分ごと') +
                     ' · Feed生成 ' +
                     formatLocalDateTime(feed.generated_at)}
               </span>
@@ -762,6 +746,8 @@ export default function Dashboard({
             </button>
           </section>
         )}
+
+        <Disclaimer />
       </div>
     </main>
   );
