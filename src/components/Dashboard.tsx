@@ -23,11 +23,9 @@ interface DashboardProps {
   isMock: boolean;
   feedingInterval: number;
   theme: ThemePreference;
-  savedFeedExists: boolean;
   savingNotice: string | null;
   onRefresh: () => void;
   onChangeFeed: () => void;
-  onDeleteSavedFeed: () => void;
   onFeedingIntervalChange: (hours: number) => void;
   onThemeChange: (theme: ThemePreference) => void;
 }
@@ -442,11 +440,9 @@ export default function Dashboard({
   isMock,
   feedingInterval,
   theme,
-  savedFeedExists,
   savingNotice,
   onRefresh,
   onChangeFeed,
-  onDeleteSavedFeed,
   onFeedingIntervalChange,
   onThemeChange,
 }: DashboardProps) {
@@ -476,12 +472,12 @@ export default function Dashboard({
   return (
     <main className="dashboard-page">
       <header className="app-header">
-        <a className="wordmark" href="./" aria-label="きょうの育児ログ ホーム">
+        <a className="wordmark" href="./" aria-label="ぴよログ かんたんダッシュボード ホーム">
           <span className="wordmark-icon" aria-hidden="true">
             ぴ
           </span>
           <span>
-            <strong>きょうの育児ログ</strong>
+            <strong>ぴよログ かんたんダッシュボード</strong>
             <small>{isMock ? 'サンプルデータ' : '非公式 · 24時間Feed'}</small>
           </span>
         </a>
@@ -530,15 +526,6 @@ export default function Dashboard({
             >
               Feed URLを変更
             </button>
-            {savedFeedExists && (
-              <button
-                className="text-button text-button-muted"
-                type="button"
-                onClick={onDeleteSavedFeed}
-              >
-                保存URLを削除
-              </button>
-            )}
           </div>
         </section>
 

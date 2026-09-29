@@ -190,13 +190,13 @@ export default function App() {
 
   function changeFeed() {
     if (isLoading) return;
+    removeSavedFeed();
     setScreen('setup');
     setActiveUrl(null);
     setFeed(null);
     setLastFetchedAt(null);
     setErrorKind(null);
     setIsMock(false);
-    setSavingNotice(null);
   }
 
   function removeSavedFeed() {
@@ -258,11 +258,9 @@ export default function App() {
       isMock={isMock}
       feedingInterval={preferences.feedingInterval}
       theme={preferences.theme}
-      savedFeedExists={hasSavedFeed}
       savingNotice={savingNotice}
       onRefresh={refresh}
       onChangeFeed={changeFeed}
-      onDeleteSavedFeed={removeSavedFeed}
       onFeedingIntervalChange={changeFeedingInterval}
       onThemeChange={changeTheme}
     />

@@ -53,7 +53,7 @@ export default function FeedSetup({
         <div className="brand-mark" aria-hidden="true">
           <span>ぴ</span>
         </div>
-        <h1>ぴよログ データフィードURL</h1>
+        <h1>ぴよログ かんたんダッシュボード</h1>
         <p className="setup-lead">
           ぴよログアプリからコピーした24時間Feed URLを貼り付けて、直近24時間の記録を見やすくまとめます。
         </p>
