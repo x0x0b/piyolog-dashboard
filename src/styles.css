@@ -655,10 +655,17 @@ input[type='password']::placeholder {
 .timeline-axis {
   display: flex;
   justify-content: space-between;
-  margin: 20px 0 9px 68px;
+  margin: 14px 0 9px 68px;
   color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
+}
+
+.timeline-instruction {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .timeline-row {
@@ -710,12 +717,68 @@ input[type='password']::placeholder {
   position: absolute;
   z-index: 2;
   top: 50%;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  appearance: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.timeline-dot::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 9px;
   height: 9px;
   border: 2px solid var(--surface);
   border-radius: 50%;
+  background: currentcolor;
   box-shadow: 0 0 0 1px currentcolor;
+  content: '';
   transform: translate(-50%, -50%);
+  transition: transform 120ms ease;
+}
+
+.timeline-dot.formula-dot,
+.timeline-dot.expressed-dot,
+.timeline-dot.breastfeeding-dot,
+.timeline-dot.pee-dot,
+.timeline-dot.poop-dot,
+.timeline-dot.sleep-dot {
+  background: transparent;
+}
+
+.timeline-dot:focus-visible::before {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.timeline-dot:focus-visible,
+.sleep-interval-trigger:focus-visible,
+.timeline-dot[data-pinned='true'],
+.sleep-interval-trigger[data-pinned='true'] {
+  z-index: 8;
+}
+
+.timeline-dot:focus-visible,
+.sleep-interval-trigger:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.expressed-dot {
+  color: var(--expressed);
+  background: var(--expressed);
+}
+
+.breastfeeding-dot {
+  color: var(--breastfeeding);
+  background: var(--breastfeeding);
 }
 
 .formula-dot {
@@ -739,20 +802,164 @@ input[type='password']::placeholder {
 }
 
 .sleep-start {
+  width: 32px;
+  height: 32px;
+}
+
+.sleep-start::before {
   width: 7px;
   height: 7px;
   border-style: dashed;
 }
 
-.sleep-span {
+.sleep-interval-trigger {
   position: absolute;
   z-index: 1;
-  top: 6px;
+  top: 50%;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: transparent;
+  color: var(--sleep);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.sleep-span {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
   height: 11px;
   min-width: 3px;
   border: 1px solid var(--sleep);
   border-radius: 6px;
   background: var(--sleep-wash);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.timeline-tooltip {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  display: none;
+  width: max-content;
+  min-width: 142px;
+  max-width: min(250px, calc(100vw - 40px));
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(20 30 25 / 12%);
+  text-align: left;
+  white-space: normal;
+  transform: translateX(-50%);
+}
+
+.timeline-tooltip::after {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 10px;
+  content: '';
+}
+
+.timeline-dot:focus-visible .timeline-tooltip,
+.timeline-dot[data-pinned='true'] .timeline-tooltip,
+.sleep-interval-trigger:focus-visible .timeline-tooltip,
+.sleep-interval-trigger[data-pinned='true'] .timeline-tooltip {
+  display: grid;
+  gap: 5px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .timeline-dot:hover::before {
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+
+  .timeline-dot:hover,
+  .sleep-interval-trigger:hover {
+    z-index: 8;
+  }
+
+  .timeline-dot:hover .timeline-tooltip,
+  .sleep-interval-trigger:hover .timeline-tooltip {
+    display: grid;
+    gap: 5px;
+  }
+}
+
+.timeline-dot.tooltip-start .timeline-tooltip,
+.sleep-interval-trigger.tooltip-start .timeline-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.timeline-dot.tooltip-end .timeline-tooltip,
+.sleep-interval-trigger.tooltip-end .timeline-tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.timeline-tooltip-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.timeline-tooltip-heading::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentcolor;
+  content: '';
+}
+
+.timeline-tooltip-time {
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.timeline-tooltip-primary {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.timeline-tooltip-muted {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.timeline-tooltip-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.timeline-tooltip-detail {
+  padding: 4px 7px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 9px;
+  line-height: 1.4;
 }
 
 .timeline-legend {
@@ -782,64 +989,6 @@ input[type='password']::placeholder {
   border: 1px solid var(--sleep);
   border-radius: 5px;
   background: var(--sleep-wash);
-}
-
-.record-list {
-  display: grid;
-  gap: 0;
-  margin: 4px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.record-row {
-  display: grid;
-  grid-template-columns: 1.2fr 0.7fr auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 49px;
-  border-top: 1px solid var(--border-soft);
-  font-size: 11px;
-}
-
-.record-time {
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.record-kind {
-  width: fit-content;
-  padding: 5px 8px;
-  border-radius: 7px;
-  color: var(--formula);
-  background: var(--formula-wash);
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.pee-kind {
-  color: var(--pee);
-  background: color-mix(in srgb, var(--pee) 14%, transparent);
-}
-
-.poop-kind {
-  color: var(--poop);
-  background: color-mix(in srgb, var(--poop) 14%, transparent);
-}
-
-.poop-details {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 9px;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.record-amount {
-  text-align: right;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
 }
 
 .empty-inline {
@@ -957,7 +1106,6 @@ input[type='password']::placeholder {
   }
 
   .sleep-span {
-    top: 7px;
     height: 13px;
   }
 }
@@ -1074,6 +1222,10 @@ input[type='password']::placeholder {
     margin-left: 58px;
   }
 
+  .timeline-instruction {
+    font-size: 9px;
+  }
+
   .timeline-row {
     grid-template-columns: 50px minmax(0, 1fr);
     gap: 8px;
@@ -1083,18 +1235,4 @@ input[type='password']::placeholder {
     margin-left: 58px;
   }
 
-  .record-row {
-    grid-template-columns: 1fr 0.6fr auto;
-    gap: 7px;
-    font-size: 10px;
-  }
-
-  .record-amount {
-    font-size: 10px;
-  }
-
-  .poop-details {
-    max-width: 125px;
-    font-size: 8px;
-  }
 }

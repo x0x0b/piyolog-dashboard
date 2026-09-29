@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   durationLabel,
   formatLocalDateTime,
@@ -78,6 +78,92 @@ function xPercent(iso: string, from: number, to: number): number {
   return Math.max(0, Math.min(100, ((Date.parse(iso) - from) / (to - from)) * 100));
 }
 
+interface TimelineTooltipInfo {
+  heading: string;
+  time: string;
+  primary?: string;
+  details: string[];
+}
+
+function timelineRecordInfo(
+  label: string,
+  record: FeedRecord,
+  sleepIntervals: Array<{ startAt: string; endAt: string | null }> = [],
+): TimelineTooltipInfo {
+  const info: TimelineTooltipInfo = {
+    heading: label,
+    time: formatLocalDateTime(record.datetime),
+    details: [],
+  };
+  if (record.type === 'Formula') {
+    const amount = recordMilkAmount(record);
+    info.primary = amount === null ? '量の記録なし' : numberFormat.format(amount) + ' ml';
+    if (amount === null) info.details.push('粉ミルク');
+  } else if (record.type === 'ExpressedBreastMilk') {
+    const amount = recordMilkAmount(record);
+    info.primary = amount === null ? '量の記録なし' : numberFormat.format(amount) + ' ml';
+  } else if (record.type === 'BreastFeeding') {
+    const amount = recordMilkAmount(record);
+    if (amount !== null) info.primary = numberFormat.format(amount) + ' ml';
+    info.details = breastfeedingDetails(record);
+  } else if (record.type === 'Poop') {
+    info.details = poopDetailsText(record)?.split(' · ') ?? ['詳細の記録なし'];
+  } else if (record.type === 'Sleep') {
+    info.heading = '睡眠開始';
+    const interval = sleepIntervals.find((item) => item.startAt === record.datetime);
+    if (interval) {
+      info.details.push(
+        interval.endAt === null
+          ? '睡眠中'
+          : '睡眠時間 ' + durationLabel(Date.parse(interval.endAt) - Date.parse(interval.startAt)),
+      );
+    }
+  } else if (record.type === 'WakeUp') {
+    info.heading = '起床';
+  }
+  return info;
+}
+
+function TimelineTooltip({
+  id,
+  info,
+}: {
+  id: string;
+  info: TimelineTooltipInfo;
+}) {
+  return (
+    <span className="timeline-tooltip" id={id} role="tooltip">
+      <span className="timeline-tooltip-heading">{info.heading}</span>
+      <span className="timeline-tooltip-time">{info.time}</span>
+      {info.primary && (
+        <strong
+          className={
+            'timeline-tooltip-primary' +
+            (info.primary === '量の記録なし' ? ' timeline-tooltip-muted' : '')
+          }
+        >
+          {info.primary}
+        </strong>
+      )}
+      {info.details.length > 0 && (
+        <span className="timeline-tooltip-details">
+          {info.details.map((detail) => (
+            <span className="timeline-tooltip-detail" key={detail}>
+              {detail}
+            </span>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function tooltipAlignment(position: number): string {
+  if (position < 34) return 'tooltip-start';
+  if (position > 66) return 'tooltip-end';
+  return 'tooltip-center';
+}
+
 function TimelineRow({
   label,
   records,
@@ -85,6 +171,9 @@ function TimelineRow({
   to,
   tone,
   sleepIntervals,
+  pinnedTooltipId,
+  onToggleTooltip,
+  onClearPinnedTooltip,
 }: {
   label: string;
   records: FeedRecord[];
@@ -92,43 +181,84 @@ function TimelineRow({
   to: number;
   tone: string;
   sleepIntervals?: Array<{ startAt: string; endAt: string | null }>;
+  pinnedTooltipId: string | null;
+  onToggleTooltip: (id: string) => void;
+  onClearPinnedTooltip: () => void;
 }) {
   return (
     <div className="timeline-row">
       <span className="timeline-label">{label}</span>
       <div className="timeline-lane">
-        {sleepIntervals?.map((interval) =>
-          interval.endAt ? (
-            <span
-              className="sleep-span"
-              key={interval.startAt + interval.endAt}
+        {sleepIntervals?.map((interval) => {
+          if (interval.endAt === null) return null;
+          const endAt = interval.endAt;
+          const id = 'sleep-' + encodeURIComponent(interval.startAt + endAt);
+          const tooltipId = 'timeline-tooltip-' + id;
+          const info: TimelineTooltipInfo = {
+            heading: '睡眠時間',
+            time: formatLocalDateTime(interval.startAt) + ' 〜 ' + formatLocalDateTime(endAt),
+            primary: durationLabel(Date.parse(endAt) - Date.parse(interval.startAt)),
+            details: [],
+          };
+          const position =
+            (xPercent(interval.startAt, from, to) + xPercent(endAt, from, to)) / 2;
+          const active = pinnedTooltipId === id;
+          return (
+            <button
+              type="button"
+              className={'sleep-interval-trigger ' + tooltipAlignment(position)}
+              key={id}
               style={{
                 left: xPercent(interval.startAt, from, to) + '%',
                 width:
-                  Math.max(
-                    0.5,
-                    xPercent(interval.endAt, from, to) - xPercent(interval.startAt, from, to),
-                  ) + '%',
+                  Math.max(0.5, xPercent(endAt, from, to) - xPercent(interval.startAt, from, to)) +
+                  '%',
               }}
-              aria-label={
-                '睡眠 ' +
-                formatLocalTime(interval.startAt) +
-                'から' +
-                formatLocalTime(interval.endAt) +
-                'まで'
+              data-pinned={active}
+              onClick={() => onToggleTooltip(id)}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== 'touch') onClearPinnedTooltip();
+              }}
+              onFocus={onClearPinnedTooltip}
+              aria-label={info.heading + ' ' + info.time + '、' + info.primary}
+              aria-describedby={tooltipId}
+            >
+              <span className="sleep-span" aria-hidden="true" />
+              <TimelineTooltip id={tooltipId} info={info} />
+            </button>
+          );
+        })}
+        {records.map((record) => {
+          const info = timelineRecordInfo(label, record, sleepIntervals);
+          const id = 'record-' + encodeURIComponent(record.event_id);
+          const tooltipId = 'timeline-tooltip-' + id;
+          const active = pinnedTooltipId === id;
+          const position = xPercent(record.datetime, from, to);
+          return (
+            <button
+              type="button"
+              className={
+                'timeline-dot ' +
+                tone +
+                (record.type === 'Sleep' ? ' sleep-start' : '') +
+                ' ' +
+                tooltipAlignment(position)
               }
-            />
-          ) : null,
-        )}
-        {records.map((record) => (
-          <span
-            className={'timeline-dot ' + tone + (record.type === 'Sleep' ? ' sleep-start' : '')}
-            key={record.event_id}
-            style={{ left: xPercent(record.datetime, from, to) + '%' }}
-            title={formatLocalDateTime(record.datetime)}
-            aria-label={label + ' ' + formatLocalDateTime(record.datetime)}
-          />
-        ))}
+              key={record.event_id}
+              style={{ left: position + '%' }}
+              data-pinned={active}
+              onClick={() => onToggleTooltip(id)}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== 'touch') onClearPinnedTooltip();
+              }}
+              onFocus={onClearPinnedTooltip}
+              aria-label={info.heading + ' ' + info.time}
+              aria-describedby={tooltipId}
+            >
+              <TimelineTooltip id={tooltipId} info={info} />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -141,10 +271,31 @@ function Timeline({
   feed: PiyologFeedV1;
   sleepIntervals: Array<{ startAt: string; endAt: string | null }>;
 }) {
+  const [pinnedTooltipId, setPinnedTooltipId] = useState<string | null>(null);
+  useEffect(() => {
+    const dismissOnOutsidePress = (event: PointerEvent) => {
+      if (
+        !(event.target instanceof Element) ||
+        !event.target.closest('.timeline-dot, .sleep-interval-trigger')
+      ) {
+        setPinnedTooltipId(null);
+      }
+    };
+    document.addEventListener('pointerdown', dismissOnOutsidePress);
+    return () => document.removeEventListener('pointerdown', dismissOnOutsidePress);
+  }, []);
+
+  const toggleTooltip = (id: string) => {
+    setPinnedTooltipId((current) => (current === id ? null : id));
+  };
+  const clearPinnedTooltip = () => setPinnedTooltipId(null);
+
   const from = Date.parse(feed.range.from);
   const to = Date.parse(feed.range.to);
   const midpoint = new Date(from + (to - from) / 2).toISOString();
   const formula = validFeedRecords(feed, ['Formula']);
+  const expressed = validFeedRecords(feed, ['ExpressedBreastMilk']);
+  const breastfeeding = validFeedRecords(feed, ['BreastFeeding']);
   const pee = validFeedRecords(feed, ['Pee']);
   const poop = validFeedRecords(feed, ['Poop']);
   const sleep = validFeedRecords(feed, ['Sleep', 'WakeUp']);
@@ -157,14 +308,64 @@ function Timeline({
           <h2 id="timeline-title">24時間のタイムライン</h2>
         </div>
       </div>
+      <p className="timeline-instruction">
+        PCは記録にマウスを重ね、スマホはタップすると詳細を表示します。スマホは外側タップで閉じます。
+      </p>
       <div className="timeline-axis">
         <span>{formatLocalTime(feed.range.from)}</span>
         <span>{formatLocalTime(midpoint)}</span>
         <span>{formatLocalTime(feed.range.to)}</span>
       </div>
-      <TimelineRow label="ミルク" records={formula} from={from} to={to} tone="formula-dot" />
-      <TimelineRow label="おしっこ" records={pee} from={from} to={to} tone="pee-dot" />
-      <TimelineRow label="うんち" records={poop} from={from} to={to} tone="poop-dot" />
+      <TimelineRow
+        label="ミルク"
+        records={formula}
+        from={from}
+        to={to}
+        tone="formula-dot"
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
+      />
+      <TimelineRow
+        label="搾母乳"
+        records={expressed}
+        from={from}
+        to={to}
+        tone="expressed-dot"
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
+      />
+      <TimelineRow
+        label="母乳"
+        records={breastfeeding}
+        from={from}
+        to={to}
+        tone="breastfeeding-dot"
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
+      />
+      <TimelineRow
+        label="おしっこ"
+        records={pee}
+        from={from}
+        to={to}
+        tone="pee-dot"
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
+      />
+      <TimelineRow
+        label="うんち"
+        records={poop}
+        from={from}
+        to={to}
+        tone="poop-dot"
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
+      />
       <TimelineRow
         label="睡眠"
         records={sleep}
@@ -172,11 +373,22 @@ function Timeline({
         to={to}
         tone="sleep-dot"
         sleepIntervals={sleepIntervals}
+        pinnedTooltipId={pinnedTooltipId}
+        onToggleTooltip={toggleTooltip}
+        onClearPinnedTooltip={clearPinnedTooltip}
       />
       <div className="timeline-legend" aria-label="タイムラインの凡例">
         <span>
           <i className="legend-dot formula-dot" />
           ミルク
+        </span>
+        <span>
+          <i className="legend-dot expressed-dot" />
+          搾母乳
+        </span>
+        <span>
+          <i className="legend-dot breastfeeding-dot" />
+          母乳
         </span>
         <span>
           <i className="legend-dot pee-dot" />
@@ -195,38 +407,6 @@ function Timeline({
           睡眠区間
         </span>
       </div>
-    </section>
-  );
-}
-
-function FormulaHistory({ feed }: { feed: PiyologFeedV1 }) {
-  const records = validFeedRecords(feed, ['Formula']).slice().reverse();
-  return (
-    <section className="panel history-panel" aria-labelledby="formula-history-title">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">RECENT RECORDS</p>
-          <h2 id="formula-history-title">ミルクの記録</h2>
-        </div>
-        <span className="section-note">{records.length}回</span>
-      </div>
-      {records.length === 0 ? (
-        <p className="empty-inline">直近24時間のミルク記録はありません</p>
-      ) : (
-        <ul className="record-list">
-          {records.map((record) => (
-            <li className="record-row" key={record.event_id}>
-              <span className="record-time">{formatLocalDateTime(record.datetime)}</span>
-              <span className="record-kind">ミルク</span>
-              <strong className="record-amount">
-                {recordMilkAmount(record) !== null
-                  ? numberFormat.format(recordMilkAmount(record)!) + ' ml'
-                  : '量の記録なし'}
-              </strong>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   );
 }
@@ -260,47 +440,7 @@ function poopDetailsText(record: FeedRecord): string | null {
   return parts.length === 0 ? null : parts.join(' · ');
 }
 
-function PottyHistory({ feed }: { feed: PiyologFeedV1 }) {
-  const records = validFeedRecords(feed, ['Pee', 'Poop'])
-    .slice()
-    .sort((a, b) => Date.parse(b.datetime) - Date.parse(a.datetime))
-    .slice(0, 8);
-  return (
-    <section className="panel history-panel" aria-labelledby="potty-history-title">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">POTTY</p>
-          <h2 id="potty-history-title">排泄の記録</h2>
-        </div>
-        <span className="section-note">直近24時間</span>
-      </div>
-      {records.length === 0 ? (
-        <p className="empty-inline">排泄の記録はありません</p>
-      ) : (
-        <ul className="record-list">
-          {records.map((record) => (
-            <li className="record-row potty-record-row" key={record.event_id}>
-              <span className="record-time">{formatLocalDateTime(record.datetime)}</span>
-              <span className={'record-kind ' + (record.type === 'Pee' ? 'pee-kind' : 'poop-kind')}>
-                {record.type === 'Pee' ? 'おしっこ' : 'うんち'}
-              </span>
-              <span className="poop-details">
-                {record.type === 'Poop' ? (poopDetailsText(record) ?? '詳細の記録なし') : ''}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-function otherFeedingDetails(record: FeedRecord): string {
-  if (record.type === 'ExpressedBreastMilk') {
-    const amount = recordMilkAmount(record);
-    return amount === null ? '量の記録なし' : numberFormat.format(amount) + ' ml';
-  }
-
+function breastfeedingDetails(record: FeedRecord): string[] {
   const parts: string[] = [];
   if (
     typeof record.leftTime === 'number' &&
@@ -319,42 +459,7 @@ function otherFeedingDetails(record: FeedRecord): string {
   if (record.last === 'left' || record.last === 'right') {
     parts.push('最後は' + (record.last === 'left' ? '左' : '右'));
   }
-  const amount = recordMilkAmount(record);
-  if (amount !== null) parts.push(numberFormat.format(amount) + ' ml');
-  return parts.length === 0 ? '詳細の記録なし' : parts.join(' · ');
-}
-
-function OtherFeedingHistory({ feed }: { feed: PiyologFeedV1 }) {
-  const records = validFeedRecords(feed, ['ExpressedBreastMilk', 'BreastFeeding'])
-    .slice()
-    .sort((a, b) => Date.parse(b.datetime) - Date.parse(a.datetime))
-    .slice(0, 8);
-  return (
-    <section className="panel history-panel" aria-labelledby="other-feeding-title">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">OTHER FEEDING</p>
-          <h2 id="other-feeding-title">母乳・搾母乳の記録</h2>
-        </div>
-        <span className="section-note">粉ミルクとは別集計</span>
-      </div>
-      {records.length === 0 ? (
-        <p className="empty-inline">母乳・搾母乳の記録はありません</p>
-      ) : (
-        <ul className="record-list">
-          {records.map((record) => (
-            <li className="record-row" key={record.event_id}>
-              <span className="record-time">{formatLocalDateTime(record.datetime)}</span>
-              <span className="record-kind other-feeding-kind">
-                {record.type === 'BreastFeeding' ? '母乳' : '搾母乳'}
-              </span>
-              <span className="poop-details">{otherFeedingDetails(record)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+  return parts.length === 0 ? ['授乳時間の記録なし'] : parts;
 }
 
 function formatDueTime(date: Date): string {
@@ -687,9 +792,6 @@ export default function Dashboard({
               <FormulaChart feed={feed} />
             </Suspense>
             <Timeline feed={feed} sleepIntervals={analytics.sleep.intervals} />
-            <PottyHistory feed={feed} />
-            <OtherFeedingHistory feed={feed} />
-            <FormulaHistory feed={feed} />
 
             <footer className="data-footer">
               <span>対象範囲 {rangeText}</span>
