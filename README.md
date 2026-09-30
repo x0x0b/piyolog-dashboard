@@ -37,7 +37,7 @@
 
 ## プライバシー
 
-- サーバー、データベース、ユーザー登録はありません。GitHub Pages上の静的ファイルだけで動作します。
+- アプリ独自のサーバー、データベース、ユーザー登録はありません。Vercel上の静的ファイルで動作し、サイトの閲覧にはVercel Authenticationを使用します。
 - Feed URLはブラウザから `https://feed.piyolog.com` へ直接GETし、このアプリの運営者や別の外部サービスへ転送しません。「この端末に保存する」は初期状態でオンです。保存しない場合はチェックを外してください。
 - 育児記録はブラウザのメモリ内だけで扱い、localStorage・IndexedDB・サーバーへ保存しません。画面を閉じると読み込んだ記録は保持されません。
 - Analytics、エラー報告、広告、外部JavaScript CDN、Push通知は使用しません。メモは画面に表示しません。
@@ -63,11 +63,23 @@ npm run lint
 npm run build
 ```
 
-## GitHub Pagesへのデプロイ
+## Vercelへのデプロイ（自分だけが閲覧）
 
-GitHub上に `piyolog-dashboard` という名前のリポジトリを作成し、このリポジトリをpushしてください。GitHubの Settings > Pages でビルド元を「GitHub Actions」に設定します。`main` ブランチへのpushでGitHub Actionsがテスト・lint・buildを実行し、成功するとGitHub Pagesへデプロイします。Actionsタブから手動実行することもできます。
+Vercel Authenticationで、サイト全体をVercelアカウントでのログインが必要な状態にします。[2026年9月9日の公式発表](https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan)により、Hobbyを含む全プランで本番の保護を追加料金なしで利用できます。
 
-Viteのproduction buildは `/piyolog-dashboard/` をbase pathとして出力します。Feed URLをソースコードやrepositoryへ入れず、公開ページにも貼り付けないでください。
+1. Vercelで、自分だけが所属するチームを使用します。初回のデプロイから保護するため、インポート前にチームのDeployment Protectionのデフォルトを **Vercel Authentication / All Deployments** に設定してください。
+2. このリポジトリの変更をGitHubへpushし、Vercelの「Add New → Project」でインポートします。Framework Presetは **Vite**、Root Directoryはリポジトリのルート、Node.jsは **24.x** を選びます。
+3. Build Commandを `npm run build`、Output Directoryを `dist`、Install Commandを `npm ci` に設定してデプロイします。環境変数は不要です。Feed URLは環境変数やソースコードに入れず、利用時にブラウザの入力欄へ貼り付けます。
+4. プロジェクトの **Security → Deployment Protection** で **Vercel Authentication / All Deployments** が有効になっていることを確認します。**Standard Protectionでは本番ドメインが公開されるため不十分です。** 閲覧権限を他のアカウントへ付与せず、共有リンク・保護の例外・認証を迂回する設定も作成しないでください。
+5. ログインしていないシークレットウィンドウで、本番URLとプレビューURLの両方がVercelの認証画面になることを確認します。自分のVercelアカウントでログインするとダッシュボードが開くことも確認してください。
+
+アクセス制限はVercel側の設定です。このリポジトリをデプロイするだけでは非公開になりません。設定の詳細は[Vercel Authenticationの公式ドキュメント](https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication)を参照してください。
+
+Viteのビルドはドメイン直下 `/` で動作します。GitHub Actionsはテスト・lint・build・整形チェックのみを実行し、VercelのGit連携がデプロイを担当します。両者は独立して動くため、GitHub Actionsの成功を待ってからデプロイされる構成ではありません。
+
+以前GitHub Pagesへデプロイしていた場合は、GitHubの **Settings → Pages → Unpublish site** で既存サイトも非公開にしてください。ワークフローを削除しても、既に公開されたサイトは自動では取り下げられません。
+
+移行後のVercelサイトはGitHub Pagesと別のオリジンになるため、ブラウザに保存したFeed URLや設定は引き継がれません。VercelのサイトでFeed URLを入力し直し、不要になった旧サイトの保存データはブラウザから削除してください。
 
 ## ライセンス
 
