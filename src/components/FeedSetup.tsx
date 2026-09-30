@@ -75,7 +75,7 @@ export default function FeedSetup({
             aria-describedby={error ? 'feed-url-hint feed-url-error' : 'feed-url-hint'}
           />
           <p className="field-hint" id="feed-url-hint">
-            URL全体をそのまま貼り付けてください。
+            ぴよログで「期間」を「直近24時間」に設定したFeed URLを貼り付けてください。
           </p>
 
           {error && (
