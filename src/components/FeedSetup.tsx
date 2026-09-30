@@ -71,7 +71,7 @@ export default function FeedSetup({
               setUrl(event.target.value);
               setValidationError(null);
             }}
-            placeholder="ぴよログからコピーしたURLを貼り付け"
+            placeholder="https://feed.piyolog.com/v1/feed/24h/12345678-1234-4123-8123-123456789abc/ExampleToken_0123456789abcdefghijklmnopqrstu"
             aria-describedby={error ? 'feed-url-hint feed-url-error' : 'feed-url-hint'}
           />
           <p className="field-hint" id="feed-url-hint">
