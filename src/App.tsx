@@ -29,7 +29,10 @@ function readSavedUrl(): string | null {
 }
 
 function readPreferences(): Preferences {
-  const defaults: Preferences = { feedingInterval: 3, theme: 'system' };
+  const defaults: Preferences = {
+    feedingInterval: 3,
+    theme: window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  };
   try {
     const raw = window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
     if (!raw) return defaults;
@@ -49,9 +52,7 @@ function readPreferences(): Preferences {
         ? candidateInterval
         : defaults.feedingInterval;
     const theme =
-      candidate.theme === 'system' || candidate.theme === 'light' || candidate.theme === 'dark'
-        ? candidate.theme
-        : defaults.theme;
+      candidate.theme === 'light' || candidate.theme === 'dark' ? candidate.theme : defaults.theme;
     return { feedingInterval, theme };
   } catch {
     return defaults;
@@ -235,12 +236,7 @@ export default function App() {
   }, [preferences]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (preferences.theme === 'system') {
-      root.removeAttribute('data-theme');
-    } else {
-      root.setAttribute('data-theme', preferences.theme);
-    }
+    document.documentElement.setAttribute('data-theme', preferences.theme);
   }, [preferences.theme]);
 
   const retryInSeconds = Math.max(0, Math.ceil((nextAllowedAt - now) / 1000));

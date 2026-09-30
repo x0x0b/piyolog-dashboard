@@ -12,7 +12,7 @@ import type { FeedErrorKind } from '../data/feedClient';
 import type { FeedRecord, PiyologFeedV1 } from '../types/feed';
 import Disclaimer from './Disclaimer';
 
-export type ThemePreference = 'system' | 'light' | 'dark';
+export type ThemePreference = 'light' | 'dark';
 
 interface DashboardProps {
   feed: PiyologFeedV1 | null;
@@ -535,9 +535,8 @@ export default function Dashboard({
           <div className="range-context">
             <span className="range-context-label">対象範囲</span>
             <h1>
-              <span>
-                <time dateTime={feed.range.from}>{formatLocalDateTime(feed.range.from)}</time> 〜
-              </span>
+              <time dateTime={feed.range.from}>{formatLocalDateTime(feed.range.from)}</time>
+              {' 〜 '}
               <time dateTime={feed.range.to}>{formatLocalDateTime(feed.range.to)}</time>
             </h1>
           </div>
@@ -551,21 +550,35 @@ export default function Dashboard({
           Feed URLを変更
         </button>
         <div className="header-actions">
-          <label className="theme-control">
-            <span className="sr-only">テーマ</span>
-            <span className="theme-symbol" aria-hidden="true">
-              {theme === 'system' ? '◐' : theme === 'dark' ? '☾' : '☀'}
-            </span>
-            <select
-              aria-label="テーマ"
-              value={theme}
-              onChange={(event) => onThemeChange(event.target.value as ThemePreference)}
+          <button
+            className="theme-toggle"
+            type="button"
+            aria-label={theme === 'dark' ? 'ライトモードに切り替える' : 'ダークモードに切り替える'}
+            title={theme === 'dark' ? 'ライトモードに切り替える' : 'ダークモードに切り替える'}
+            onClick={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
             >
-              <option value="system">自動テーマ</option>
-              <option value="light">ライト</option>
-              <option value="dark">ダーク</option>
-            </select>
-          </label>
+              {theme === 'light' ? (
+                <>
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+                </>
+              ) : (
+                <path d="M21 12.8A9 9 0 0 1 11.2 3a9 9 0 1 0 9.8 9.8Z" />
+              )}
+            </svg>
+          </button>
         </div>
       </header>
 

@@ -335,11 +335,11 @@ input[type='text']::placeholder {
   display: grid;
   grid-template-areas: 'brand range change theme';
   grid-template-columns: minmax(0, 1fr) auto auto auto;
-  min-height: 72px;
+  min-height: 54px;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px max(20px, calc((100% - 1040px) / 2));
+  gap: 0 12px;
+  padding: 4px max(20px, calc((100% - 1040px) / 2));
   border-bottom: 1px solid var(--header-border);
   background: var(--header-bg);
   backdrop-filter: blur(18px);
@@ -355,11 +355,11 @@ input[type='text']::placeholder {
 }
 
 .wordmark-icon {
-  width: 41px;
-  height: 41px;
+  width: 28px;
+  height: 28px;
   flex: 0 0 auto;
-  border-radius: 15px 15px 15px 7px;
-  font-size: 19px;
+  border-radius: 10px 10px 10px 5px;
+  font-size: 15px;
 }
 
 .wordmark strong,
@@ -400,7 +400,6 @@ input[type='text']::placeholder {
   gap: 8px;
 }
 
-.theme-control select,
 .next-feed-estimate-line select {
   min-height: 42px;
   padding: 0 32px 0 12px;
@@ -412,8 +411,26 @@ input[type='text']::placeholder {
   font-weight: 650;
 }
 
-.theme-symbol {
-  display: none;
+.theme-toggle {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--accent-wash);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
 }
 
 .dashboard-content {
@@ -424,9 +441,11 @@ input[type='text']::placeholder {
 
 .range-context {
   grid-area: range;
-  display: grid;
+  display: flex;
+  align-items: baseline;
   min-width: 0;
-  gap: 3px;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .range-context-label {
@@ -435,17 +454,11 @@ input[type='text']::placeholder {
 }
 
 .range-context h1 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 4px;
   margin: 0;
   font-size: 12px;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.035em;
-}
-
-.range-context h1 > * {
-  white-space: nowrap;
 }
 
 .header-feed-change {
@@ -1195,28 +1208,29 @@ input[type='text']::placeholder {
 @media (max-width: 900px) {
   .app-header {
     grid-template-areas:
-      'brand theme'
-      'range change';
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 8px;
+      'brand change theme'
+      'range range range';
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    row-gap: 2px;
+  }
+
+  .wordmark strong {
+    display: none;
+  }
+
+  .sample-badge {
+    margin-top: 0;
   }
 }
 
 @media (max-width: 480px) {
   .app-header {
-    min-height: 64px;
     padding-right: 13px;
     padding-left: 15px;
   }
 
   .wordmark {
     gap: 8px;
-  }
-
-  .wordmark-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 17px;
   }
 
   .wordmark strong {
@@ -1229,38 +1243,6 @@ input[type='text']::placeholder {
 
   .header-actions {
     gap: 6px;
-  }
-
-  .theme-control select {
-    position: relative;
-    z-index: 1;
-    width: 43px;
-    min-height: 41px;
-    padding: 0 0 0 8px;
-    color: transparent;
-  }
-
-  .theme-control {
-    position: relative;
-    display: inline-flex;
-  }
-
-  .theme-symbol {
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    left: 0;
-    display: grid;
-    width: 43px;
-    height: 41px;
-    color: var(--text);
-    font-size: 16px;
-    pointer-events: none;
-    place-items: center;
-  }
-
-  .theme-control option {
-    color: var(--text);
   }
 
   .dashboard-content {
