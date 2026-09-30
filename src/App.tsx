@@ -8,6 +8,8 @@ import type { PiyologFeedV1 } from './types/feed';
 
 const FEED_STORAGE_KEY = 'piyolog-dashboard:feed-url';
 const PREFERENCES_STORAGE_KEY = 'piyolog-dashboard:preferences';
+const FEED_REFRESH_INTERVAL_MS = 61_000;
+const FEED_RESUME_REFRESH_THRESHOLD_MS = 2 * 60_000;
 
 interface Preferences {
   feedingInterval: number;
@@ -71,11 +73,14 @@ function writeSavedUrl(url: string | null): boolean {
 
 function cooldownFor(kind: FeedErrorKind, failures: number): number {
   if (kind === 'network' || kind === 'server' || kind === 'rate-limit') {
-    const exponential = Math.min(15 * 60_000, 60_000 * 2 ** Math.min(failures - 1, 4));
+    const exponential = Math.min(
+      15 * 60_000,
+      FEED_REFRESH_INTERVAL_MS * 2 ** Math.min(failures - 1, 4),
+    );
     const serverFloor = kind === 'rate-limit' ? 120_000 : 0;
     return Math.max(exponential, serverFloor) + Math.floor(Math.random() * 5000);
   }
-  return 60_000;
+  return FEED_REFRESH_INTERVAL_MS;
 }
 
 export default function App() {
@@ -119,7 +124,7 @@ export default function App() {
       setLastFetchedAt(completedAt);
       setErrorKind(null);
       failureCount.current = 0;
-      const allowedAt = completedAt + 60_000;
+      const allowedAt = completedAt + FEED_REFRESH_INTERVAL_MS;
       nextAllowedAtRef.current = allowedAt;
       setNextAllowedAt(allowedAt);
       return true;
@@ -165,19 +170,54 @@ export default function App() {
       return;
     }
 
-    const refreshWhenAllowed = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() >= nextAllowedAtRef.current) void requestFeed(activeUrl, true);
+    let timer: number | undefined;
+    const clearTimer = () => {
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        timer = undefined;
+      }
     };
-    const delay = Math.max(0, nextAllowedAtRef.current - Date.now());
-    const timer = window.setTimeout(refreshWhenAllowed, delay);
-    document.addEventListener('visibilitychange', refreshWhenAllowed);
+    const scheduleRefresh = (waitForResumeThreshold: boolean) => {
+      clearTimer();
+      if (document.visibilityState !== 'visible') return;
+
+      const allowedAt = nextAllowedAtRef.current;
+      const resumeAt =
+        lastFetchedAt === null
+          ? allowedAt
+          : Math.max(allowedAt, lastFetchedAt + FEED_RESUME_REFRESH_THRESHOLD_MS);
+      const refreshAt = waitForResumeThreshold ? resumeAt : allowedAt;
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        if (document.visibilityState === 'visible') void requestFeed(activeUrl, true);
+      }, Math.max(0, refreshAt - Date.now()));
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') {
+        clearTimer();
+        return;
+      }
+
+      const now = Date.now();
+      const stale =
+        lastFetchedAt !== null && now - lastFetchedAt >= FEED_RESUME_REFRESH_THRESHOLD_MS;
+      if (stale && now >= nextAllowedAtRef.current) {
+        clearTimer();
+        void requestFeed(activeUrl, true);
+        return;
+      }
+
+      scheduleRefresh(true);
+    };
+
+    scheduleRefresh(false);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener('visibilitychange', refreshWhenAllowed);
+      clearTimer();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [activeUrl, errorKind, isLoading, isMock, nextAllowedAt, requestFeed, screen]);
+  }, [activeUrl, errorKind, isLoading, isMock, lastFetchedAt, nextAllowedAt, requestFeed, screen]);
 
   useEffect(() => {
     if (errorKind === 'cooldown' && now >= nextAllowedAt) setErrorKind(null);
