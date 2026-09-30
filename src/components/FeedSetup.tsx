@@ -47,9 +47,13 @@ export default function FeedSetup({
   return (
     <main className="setup-page">
       <div className="setup-card">
-        <div className="brand-mark" aria-hidden="true">
-          <span>ぴ</span>
-        </div>
+        <img
+          className="brand-mark"
+          src={import.meta.env.BASE_URL + 'dashboard-icon.svg'}
+          alt=""
+          width="48"
+          height="48"
+        />
         <h1>
           ぴよログ<span>かんたんダッシュボード</span>
         </h1>

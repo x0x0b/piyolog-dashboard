@@ -528,9 +528,13 @@ export default function Dashboard({
     <main className="dashboard-page">
       <header className="app-header">
         <a className="wordmark" href="./" aria-label="ぴよログ かんたんダッシュボード ホーム">
-          <span className="wordmark-icon" aria-hidden="true">
-            ぴ
-          </span>
+          <img
+            className="wordmark-icon"
+            src={import.meta.env.BASE_URL + 'dashboard-icon.svg'}
+            alt=""
+            width="32"
+            height="32"
+          />
           <span>
             <strong>ぴよログ かんたんダッシュボード</strong>
             {isMock && <span className="sample-badge">サンプルデータ</span>}

@@ -66,13 +66,13 @@ a {
 
 .brand-mark,
 .wordmark-icon {
-  width: 28px;
-  height: 28px;
+  display: block;
   flex: 0 0 auto;
-  font-size: 23px;
 }
 
 .brand-mark {
+  width: 48px;
+  height: 48px;
   margin-bottom: 26px;
 }
 
@@ -340,11 +340,8 @@ input[type='text']::placeholder {
 }
 
 .wordmark-icon {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  border-radius: var(--radius-md);
-  font-size: 15px;
+  width: 32px;
+  height: 32px;
 }
 
 .wordmark strong,
