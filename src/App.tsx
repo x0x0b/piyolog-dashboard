@@ -187,10 +187,13 @@ export default function App() {
           ? allowedAt
           : Math.max(allowedAt, lastFetchedAt + FEED_RESUME_REFRESH_THRESHOLD_MS);
       const refreshAt = waitForResumeThreshold ? resumeAt : allowedAt;
-      timer = window.setTimeout(() => {
-        timer = undefined;
-        if (document.visibilityState === 'visible') void requestFeed(activeUrl, true);
-      }, Math.max(0, refreshAt - Date.now()));
+      timer = window.setTimeout(
+        () => {
+          timer = undefined;
+          if (document.visibilityState === 'visible') void requestFeed(activeUrl, true);
+        },
+        Math.max(0, refreshAt - Date.now()),
+      );
     };
     const handleVisibilityChange = () => {
       if (document.visibilityState !== 'visible') {
@@ -270,6 +273,12 @@ export default function App() {
 
   function changeFeed() {
     if (isLoading) return;
+    const message = hasSavedFeed
+      ? 'Feed URLを変更しますか？\nこの端末に保存したFeed URLを削除して、入力画面に戻ります。ぴよログの記録は削除されません。'
+      : isMock
+        ? 'サンプル表示を終了して、Feed URLの入力画面に戻りますか？'
+        : 'Feed URLを変更しますか？\n入力画面に戻ります。再度利用するにはFeed URLの入力が必要です。';
+    if (!window.confirm(message)) return;
     removeSavedFeed();
     setScreen('setup');
     setActiveUrl(null);
