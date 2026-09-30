@@ -155,13 +155,7 @@ function timelineRecordInfo(
   return info;
 }
 
-function TimelineTooltip({
-  id,
-  info,
-}: {
-  id: string;
-  info: TimelineTooltipInfo;
-}) {
+function TimelineTooltip({ id, info }: { id: string; info: TimelineTooltipInfo }) {
   return (
     <span className="timeline-tooltip" id={id} role="tooltip">
       <span className="timeline-tooltip-heading">{info.heading}</span>
@@ -241,8 +235,7 @@ function TimelineRow({
             primary: durationLabel(Date.parse(endAt) - Date.parse(interval.startAt)),
             details: [],
           };
-          const position =
-            (xPercent(interval.startAt, from, to) + xPercent(endAt, from, to)) / 2;
+          const position = (xPercent(interval.startAt, from, to) + xPercent(endAt, from, to)) / 2;
           const active = pinnedTooltipId === id;
           return (
             <button
@@ -523,9 +516,6 @@ export default function Dashboard({
     feed && lastFetchedAt !== null ? Date.parse(feed.generated_at) + (now - lastFetchedAt) : now;
   const remaining = estimatedNext ? estimatedNext.getTime() - feedClockNow : null;
   const error = feedErrorMessage(errorKind, retryInSeconds);
-  const rangeText = feed
-    ? formatLocalDateTime(feed.range.from) + ' 〜 ' + formatLocalDateTime(feed.range.to)
-    : '';
   const expressed = analytics?.expressedBreastMilk;
   const breastfeeding = analytics?.breastFeeding;
 
@@ -538,9 +528,28 @@ export default function Dashboard({
           </span>
           <span>
             <strong>ぴよログ かんたんダッシュボード</strong>
-            <small>{isMock ? 'サンプルデータ' : '非公式 · 24時間Feed'}</small>
+            {isMock && <span className="sample-badge">サンプルデータ</span>}
           </span>
         </a>
+        {feed && (
+          <div className="range-context">
+            <span className="range-context-label">対象範囲</span>
+            <h1>
+              <span>
+                <time dateTime={feed.range.from}>{formatLocalDateTime(feed.range.from)}</time> 〜
+              </span>
+              <time dateTime={feed.range.to}>{formatLocalDateTime(feed.range.to)}</time>
+            </h1>
+          </div>
+        )}
+        <button
+          className="text-button header-feed-change"
+          type="button"
+          onClick={onChangeFeed}
+          disabled={isLoading}
+        >
+          Feed URLを変更
+        </button>
         <div className="header-actions">
           <label className="theme-control">
             <span className="sr-only">テーマ</span>
@@ -561,25 +570,6 @@ export default function Dashboard({
       </header>
 
       <div className="dashboard-content">
-        <section className="page-intro">
-          {feed && (
-            <div className="range-context">
-              <span className="range-context-label">対象範囲</span>
-              <h1>{rangeText}</h1>
-            </div>
-          )}
-          <div className="feed-actions">
-            <button
-              className="text-button"
-              type="button"
-              onClick={onChangeFeed}
-              disabled={isLoading}
-            >
-              Feed URLを変更
-            </button>
-          </div>
-        </section>
-
         {savingNotice && (
           <div className="alert alert-note" role="status">
             {savingNotice}

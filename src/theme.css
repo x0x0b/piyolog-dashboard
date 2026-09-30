@@ -38,6 +38,7 @@
   --chart-grid: #ece9e1;
   --chart-cursor: rgb(128 121 104 / 9%);
   --error: #8c4c45;
+  --sample-color: #c81e1e;
   --error-border: #ead1cd;
   --error-bg: #fff2f0;
   --note: #6b614b;
@@ -86,6 +87,7 @@
     --chart-grid: #42453f;
     --chart-cursor: rgb(220 216 200 / 8%);
     --error: #edaaa2;
+    --sample-color: #ff9292;
     --error-border: #67413d;
     --error-bg: #352624;
     --note: #d1c49f;
@@ -137,6 +139,7 @@
   --chart-grid: #42453f;
   --chart-cursor: rgb(220 216 200 / 8%);
   --error: #edaaa2;
+  --sample-color: #ff9292;
   --error-border: #67413d;
   --error-bg: #352624;
   --note: #d1c49f;
