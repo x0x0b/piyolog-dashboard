@@ -129,7 +129,7 @@ export default function FeedSetup({
 
         {import.meta.env.DEV && (
           <button className="button button-quiet button-wide mock-button" onClick={onUseMock}>
-            サンプルデータで表示を試す（開発用）
+            サンプルデータで表示を試す
           </button>
         )}
         <p className="setup-footnote">
