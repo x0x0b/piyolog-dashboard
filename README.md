@@ -72,3 +72,6 @@ Viteのproduction buildは `/piyolog-dashboard/` をbase pathとして出力し�
 ## ライセンス
 
 [MIT License](https://github.com/x0x0b/piyolog-dashboard/blob/main/LICENSE)
+
+フォントには [LINE Seed JP](https://fonts.google.com/specimen/LINE+Seed+JP) を使用し、Google Fontsから読み込みます。
+Google Fontsへの通信はフォントの読み込みに使用し、Feed URLや育児記録は送信しません。

@@ -237,6 +237,12 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', preferences.theme);
+    const background = getComputedStyle(document.documentElement)
+      .getPropertyValue('--background')
+      .trim();
+    if (background) {
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
+    }
   }, [preferences.theme]);
 
   const retryInSeconds = Math.max(0, Math.ceil((nextAllowedAt - now) / 1000));

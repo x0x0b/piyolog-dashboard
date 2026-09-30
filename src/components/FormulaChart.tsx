@@ -44,14 +44,14 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
                 tickFormatter={(value: number) => formatLocalTime(new Date(value).toISOString())}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 11 }}
+                tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
                 minTickGap={28}
               />
               <YAxis
                 unit=" ml"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: 'var(--muted)', fontSize: 11 }}
+                tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
                 width={56}
                 tickFormatter={(value: number) => String(value)}
               />
@@ -61,10 +61,10 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
                 formatter={(value) => [numberFormat.format(Number(value)) + ' ml', 'ミルク量']}
                 contentStyle={{
                   border: '1px solid var(--border)',
-                  borderRadius: 12,
+                  borderRadius: 'var(--radius-lg)',
                   background: 'var(--surface)',
                   color: 'var(--text)',
-                  boxShadow: '0 8px 24px rgb(20 30 25 / 12%)',
+                  boxShadow: 'var(--shadow-lg)',
                 }}
               />
               <Bar dataKey="amount" fill="var(--formula)" maxBarSize={28} radius={[7, 7, 2, 2]} />
