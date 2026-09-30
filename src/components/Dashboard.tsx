@@ -75,23 +75,28 @@ function timeText(iso: string | null): string {
   return iso === null ? '—' : formatLocalTime(iso);
 }
 
-function CountTile({
-  label,
-  value,
-  detail,
-  tone,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-  tone?: string;
-}) {
+function CountTile({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <article className={'summary-tile' + (tone ? ' ' + tone : '')}>
-      <p className="tile-label">{label}</p>
-      <p className="tile-value">{value}</p>
-      <p className="tile-detail">{detail}</p>
-    </article>
+    <div className="summary-tile">
+      <dt className="tile-label">{label}</dt>
+      <dd className="tile-value">
+        {value === '—'
+          ? value
+          : value
+              .split(/(\d[\d,.]*)/g)
+              .filter(Boolean)
+              .map((part, index) =>
+                /\d/.test(part) ? (
+                  part
+                ) : (
+                  <span className="metric-unit" key={index}>
+                    {part.trim()}
+                  </span>
+                ),
+              )}
+      </dd>
+      <dd className="tile-detail">{detail}</dd>
+    </div>
   );
 }
 
@@ -629,18 +634,20 @@ export default function Dashboard({
                   </div>
                   <div className="next-feed-result">
                     <div className="next-feed-estimate-line">
-                      <select
-                        value={feedingInterval}
-                        onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
-                        aria-label="前回からの間隔"
-                      >
-                        {feedingIntervalOptions.map((minutes) => (
-                          <option key={minutes} value={minutes / 60}>
-                            {formatFeedingInterval(minutes)}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="next-feed-after">後は</span>
+                      <div className="next-feed-interval">
+                        <select
+                          value={feedingInterval}
+                          onChange={(event) => onFeedingIntervalChange(Number(event.target.value))}
+                          aria-label="前回からの間隔"
+                        >
+                          {feedingIntervalOptions.map((minutes) => (
+                            <option key={minutes} value={minutes / 60}>
+                              {formatFeedingInterval(minutes)}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="next-feed-after">後は</span>
+                      </div>
                       <div className="next-feed-time">
                         <strong>{formatDueTime(estimatedNext)}</strong>
                         <span className="next-feed-countdown">
@@ -675,18 +682,16 @@ export default function Dashboard({
                 </div>
                 <span className="section-note">今日（0時〜現在）・直近24時間</span>
               </div>
-              <div className="summary-grid">
+              <dl className="summary-grid summary-milk">
                 <CountTile
                   label="今日の合計ミルク量"
                   value={amountText(formula.todayTotal, formula.today)}
                   detail={'0時〜現在 · ' + String(formula.today) + '回'}
-                  tone="tile-formula"
                 />
                 <CountTile
                   label="直近24時間の合計ミルク量"
                   value={amountText(formula.last24HoursTotal, formula.last24Hours)}
                   detail={String(formula.last24Hours) + '回'}
-                  tone="tile-formula"
                 />
                 <CountTile
                   label="ミルク1回あたりの平均量"
@@ -704,19 +709,21 @@ export default function Dashboard({
                   }
                   detail="直近24時間のミルク記録から計算"
                 />
+              </dl>
+              <dl className="summary-care">
                 <CountTile
-                  label="直近24時間の搾母乳量"
+                  label="搾母乳"
                   value={amountText(
                     expressed?.last24HoursTotal ?? null,
                     expressed?.last24Hours ?? 0,
                   )}
-                  detail={String(expressed?.last24Hours ?? 0) + '回 · 粉ミルクとは別集計'}
-                  tone="tile-expressed"
+                  detail={'直近24時間 · ' + String(expressed?.last24Hours ?? 0) + '回'}
                 />
                 <CountTile
-                  label="直近24時間の授乳"
+                  label="母乳"
                   value={String(breastfeeding?.last24Hours ?? 0) + '回'}
                   detail={
+                    '直近24時間 · ' +
                     (breastfeeding?.totalMillis == null
                       ? '授乳時間の記録なし'
                       : '合計授乳時間 ' + durationLabel(breastfeeding.totalMillis)) +
@@ -734,7 +741,6 @@ export default function Dashboard({
                     '回 · 最後 ' +
                     timeText(analytics.pee.lastAt)
                   }
-                  tone="tile-pee"
                 />
                 <CountTile
                   label="今日のうんち"
@@ -745,10 +751,9 @@ export default function Dashboard({
                     '回 · 最後 ' +
                     timeText(analytics.poop.lastAt)
                   }
-                  tone="tile-poop"
                 />
                 <CountTile
-                  label="直近24時間の睡眠時間"
+                  label="睡眠"
                   value={
                     analytics.sleep.confirmedMillis === 0
                       ? '—'
@@ -756,14 +761,15 @@ export default function Dashboard({
                   }
                   detail={
                     analytics.sleep.currentSleepStart
-                      ? '睡眠中 · ' + formatLocalTime(analytics.sleep.currentSleepStart) + 'から'
+                      ? '直近24時間 · 睡眠中（' +
+                        formatLocalTime(analytics.sleep.currentSleepStart) +
+                        '〜）'
                       : analytics.sleep.intervals.length === 0
-                        ? '睡眠の記録なし'
-                        : '起床まで記録された区間の合計'
+                        ? '直近24時間 · 睡眠の記録なし'
+                        : '直近24時間 · 起床までの合計'
                   }
-                  tone="tile-sleep"
                 />
-              </div>
+              </dl>
             </section>
 
             <Timeline feed={feed} sleepIntervals={analytics.sleep.intervals} />

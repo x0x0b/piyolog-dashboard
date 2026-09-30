@@ -50,10 +50,10 @@ export default function FeedSetup({
         <div className="brand-mark" aria-hidden="true">
           <span>ぴ</span>
         </div>
-        <h1>ぴよログ かんたんダッシュボード</h1>
-        <p className="setup-lead">
-          ぴよログの直近24時間の記録を見やすくまとめます。
-        </p>
+        <h1>
+          ぴよログ<span>かんたんダッシュボード</span>
+        </h1>
+        <p className="setup-lead">ぴよログの直近24時間の記録を見やすくまとめます。</p>
 
         <form onSubmit={submit}>
           <label className="field-label" htmlFor="feed-url">

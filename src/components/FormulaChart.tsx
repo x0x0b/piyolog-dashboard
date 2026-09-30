@@ -67,7 +67,7 @@ export default function FormulaChart({ feed }: { feed: PiyologFeedV1 }) {
                   boxShadow: 'var(--shadow-lg)',
                 }}
               />
-              <Bar dataKey="amount" fill="var(--formula)" maxBarSize={28} radius={[7, 7, 2, 2]} />
+              <Bar dataKey="amount" fill="var(--formula)" maxBarSize={22} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
